@@ -1648,7 +1648,9 @@ function tick() {
     closeDialog();
   }
 
-  heading += turn * 2.6 * dt;
+  /* while backing up the bear faces the camera, so its left/right are
+     mirrored — invert steering to keep A = screen-left, D = screen-right */
+  heading += turn * (fwd < 0 ? -2.6 : 2.6) * dt;
   const dir = new THREE.Vector3(Math.sin(heading), 0, Math.cos(heading));
 
   const targetSpeed = teleport.active ? 0 : fwd * 7.5;
