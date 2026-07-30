@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Samuel Choe — Welcome to My World</title>
+<title>Sam's Tiny World — a little planet to wander</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -297,11 +297,10 @@
 <div id="desktop-gate">
   <div class="globe">🌍</div>
   <h1>This world needs a bigger screen</h1>
-  <p>Sam&rsquo;s World-folio is an interactive 3D world built for keyboards and desktop screens. Come back on a computer to explore it!</p>
-  <p><a href="https://schoe99.github.io/">&larr; Back to my portfolio</a></p>
+  <p>Sam&rsquo;s Tiny World is an interactive 3D playground built for keyboards and desktop screens. Come back on a computer to explore it!</p>
 </div>
 
-<div class="hud" id="title">🌍 <em>Sam's</em> World-folio</div>
+<div class="hud" id="title">🌍 <em>Sam's</em> Tiny World</div>
 
 <div class="hud" id="controls">
   <b>W</b><b>A</b><b>S</b><b>D</b> or arrows — waddle around<br>
@@ -333,7 +332,7 @@
 // desktop-only: the gate is shown by CSS on phones/tablets — don't boot the 3D world there
 if (getComputedStyle(document.getElementById('desktop-gate')).display !== 'none') {
   document.getElementById('loader').classList.add('done');
-  throw new Error('World-folio is desktop-only');
+  throw new Error('Tiny World is desktop-only');
 }
 
 import * as THREE from 'three';
@@ -352,38 +351,38 @@ const SPOTS = [
     ],
   },
   {
-    id: 'signal', name: 'Signal Peaks', tag: 'Project 01',
+    id: 'signal', name: 'Signal Peaks', tag: 'Sam',
     color: '#7f9bd1', lat: -16, lon: 72, size: 1.15, theme: 'mountain',
     pages: [
-      "⛰️ Signal Peaks — home of the Market Intelligence Platform.",
-      "It ingests live equities data on a schedule, sniffs out anomalies, and serves it all up on a dashboard. Python, PostgreSQL, and a healthy respect for cron.",
-      "Phases 0–2 shipped. The mountain keeps growing…",
+      "⛰️ Signal Peaks — the tallest spot on the whole planet.",
+      "On a clear day you can see everything from up here. Granted, it's a very small planet.",
+      "When the wind is just right, the peaks hum. The locals insist the mountain is singing.",
     ],
   },
   {
-    id: 'crypto', name: 'Crypto Cove', tag: 'Project 02',
+    id: 'crypto', name: 'Coconut Cove', tag: 'Sam',
     color: '#f2b04e', lat: 18, lon: 144, size: 0.95, theme: 'beach',
     pages: [
-      "🏝️ Crypto Cove — the Crypto Analytics Engine lives here.",
-      "A parallel branch of the platform tracking crypto markets in real time. WebSockets, git worktrees, and the occasional midnight deploy.",
-      "It runs in its own little universe and merges back at milestones. Just like this island.",
+      "🏝️ Coconut Cove — sun, sand, and suspiciously perfect waves.",
+      "The palms here grow the fluffiest coconuts on the planet, and the crabs run a very tight beach-cleanup crew.",
+      "One rule in the cove: no worries allowed past the tide line.",
     ],
   },
   {
-    id: 'skills', name: 'Toolbox Tundra', tag: 'Skills',
+    id: 'skills', name: 'Snowdrift Tundra', tag: 'Sam',
     color: '#8fd7e8', lat: -16, lon: -144, size: 1.05, theme: 'snow',
     pages: [
-      "❄️ Toolbox Tundra — everything I pack for an expedition.",
-      "Python · TypeScript · SQL · Three.js · Docker · Git — plus data pipelines, WebGL, and the patience to debug all of the above.",
-      "Cold climate, warm stack.",
+      "❄️ Snowdrift Tundra — bring a scarf. Maybe two.",
+      "The snow here never melts. It just rearranges itself into slightly better snowmen overnight.",
+      "Cold climate, warm hearts.",
     ],
   },
   {
-    id: 'contact', name: 'Hello Harbor', tag: 'Contact',
+    id: 'contact', name: 'Hello Harbor', tag: 'Sam',
     color: '#e4906e', lat: 18, lon: -72, size: 0.85, theme: 'autumn',
     pages: [
       "🗼 Hello Harbor — the lighthouse is always on.",
-      "Want to build something together? Send a letter to samuel.choe99@gmail.com — I read every one!",
+      "Nobody remembers who first lit it, but everyone agrees it would be terribly rude to let it go out. Wave to the ships for me!",
     ],
   },
 ];
@@ -708,7 +707,7 @@ const NPCS = [
     voice: { base: 540, range: 380 },
     pages: [
       "SQUAWK! Hey! Off my buoy!! …Kidding, kidding. I'm Gully. Best view of the whole ocean from up here.",
-      "Word on the waves: the human who built this place ships data pipelines by day and tiny planets by night. Weird bird, that one.",
+      "Word on the waves: this whole planet fits in a teacup. I've flown around it twice before breakfast. Twice!",
     ],
   },
   {
@@ -1030,74 +1029,120 @@ let boatBobber = null;
 }
 
 /* ================================================================
-   THE CHARACTER — a chibi explorer
+   THE CHARACTER — a low-poly honey bear (procedural remake of the
+   Blender bear; the head is its own group so it can look around)
    ================================================================ */
 const chara = new THREE.Group();
 
-const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 14), toon('#ff8a7a'));
-body.scale.set(1, 1.15, 0.9);
+const FUR = '#c9a37e', CREAM = '#f3e7d3', COCOA = '#7b5a41',
+      SCARF = '#f28d7d', POT = '#f1ece1', HONEY = '#e0b23e';
+
+const body = new THREE.Mesh(new THREE.SphereGeometry(0.44, 10, 8), toon(FUR));
+body.scale.set(1, 1.12, 0.92);
 body.position.y = 0.62;
 body.castShadow = true;
 
-const head = new THREE.Mesh(new THREE.SphereGeometry(0.62, 18, 16), toon('#ffe0b8'));
-head.position.y = 1.62;
+const belly = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), toon(CREAM));
+belly.scale.set(1, 1.15, 0.55);
+belly.position.set(0, 0.56, 0.2);
+
+const tail = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), toon(FUR));
+tail.position.set(0, 0.55, -0.42);
+
+/* coral scarf: ring at the neck + a little ribbon tail */
+const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.09, 8, 14), toon(SCARF));
+scarf.position.y = 1.0;
+scarf.rotation.x = Math.PI / 2;
+const scarfTail = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), toon(SCARF));
+scarfTail.scale.set(1, 1.6, 0.5);
+scarfTail.position.set(0.18, 0.8, 0.31);
+
+/* head pivots at the neck so the bear can glance around in tick() */
+const headGroup = new THREE.Group();
+headGroup.position.y = 1.02;
+
+const head = new THREE.Mesh(new THREE.SphereGeometry(0.58, 12, 10), toon(FUR));
+head.scale.set(1, 0.94, 0.94);
+head.position.y = 0.5;
 head.castShadow = true;
 
-const hair = new THREE.Mesh(new THREE.SphereGeometry(0.64, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.52), toon('#5d4433'));
-hair.position.y = 1.72;
+const earGeo = new THREE.SphereGeometry(0.16, 8, 6);
+const earL = new THREE.Mesh(earGeo, toon(FUR));
+const earR = new THREE.Mesh(earGeo, toon(FUR));
+earL.position.set(-0.42, 0.92, -0.06);
+earR.position.set(0.42, 0.92, -0.06);
+const earInGeo = new THREE.CircleGeometry(0.07, 8);
+const earInMat = new THREE.MeshBasicMaterial({ color: CREAM });
+const earInL = new THREE.Mesh(earInGeo, earInMat);
+const earInR = new THREE.Mesh(earInGeo, earInMat);
+earInL.position.set(-0.44, 0.95, 0.09); earInL.rotation.y = -0.25;
+earInR.position.set(0.44, 0.95, 0.09);  earInR.rotation.y = 0.25;
 
-const eyeGeo = new THREE.SphereGeometry(0.075, 8, 8);
-const eyeMat = new THREE.MeshBasicMaterial({ color: '#3a2f26' });
+const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), toon(CREAM));
+muzzle.scale.set(1.15, 0.78, 0.7);
+muzzle.position.set(0, 0.34, 0.5);
+const nose = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), toon(COCOA));
+nose.scale.set(1.2, 0.85, 0.8);
+nose.position.set(0, 0.42, 0.65);
+const smile = new THREE.Mesh(
+  new THREE.TorusGeometry(0.05, 0.012, 6, 10, Math.PI),
+  new THREE.MeshBasicMaterial({ color: COCOA })
+);
+smile.position.set(0, 0.34, 0.65);
+smile.rotation.z = Math.PI;
+
+/* black oval eyes — no highlights, per the reference */
+const eyeGeo = new THREE.SphereGeometry(0.06, 8, 8);
+const eyeMat = new THREE.MeshBasicMaterial({ color: '#1a1a1a' });
 const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
 const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
 eyeL.scale.y = 1.5; eyeR.scale.y = 1.5;
-eyeL.position.set(-0.2, 1.62, 0.56);
-eyeR.position.set(0.2, 1.62, 0.56);
+eyeL.position.set(-0.24, 0.57, 0.49);
+eyeR.position.set(0.24, 0.57, 0.49);
 
-const blushMat = new THREE.MeshBasicMaterial({ color: '#ffb3a0' });
-const blushL = new THREE.Mesh(new THREE.CircleGeometry(0.08, 10), blushMat);
-const blushR = new THREE.Mesh(new THREE.CircleGeometry(0.08, 10), blushMat);
-blushL.position.set(-0.36, 1.48, 0.5); blushL.rotation.y = -0.5;
-blushR.position.set(0.36, 1.48, 0.5);  blushR.rotation.y = 0.5;
+const blushMat = new THREE.MeshBasicMaterial({ color: '#f0a8b8' });
+const blushL = new THREE.Mesh(new THREE.CircleGeometry(0.055, 8), blushMat);
+const blushR = new THREE.Mesh(new THREE.CircleGeometry(0.055, 8), blushMat);
+blushL.position.set(-0.4, 0.42, 0.37); blushL.rotation.y = -0.6;
+blushR.position.set(0.4, 0.42, 0.37);  blushR.rotation.y = 0.6;
 
-/* face details: eye glints + a smile */
-const glintMat = new THREE.MeshBasicMaterial({ color: '#ffffff' });
-const glintL = new THREE.Mesh(new THREE.SphereGeometry(0.024, 6, 6), glintMat);
-const glintR = glintL.clone();
-glintL.position.set(-0.225, 1.66, 0.6);
-glintR.position.set(0.225, 1.66, 0.6);
-const mouth = new THREE.Mesh(
-  new THREE.TorusGeometry(0.07, 0.016, 6, 12, Math.PI),
-  new THREE.MeshBasicMaterial({ color: '#8a5a4a' })
-);
-mouth.position.set(0, 1.47, 0.59);
-mouth.rotation.z = Math.PI;
+/* squat honey pot sitting on the crown of the head */
+const potGrp = new THREE.Group();
+potGrp.position.set(0.04, 0.96, -0.02);
+const potBody = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.24, 10), toon(POT));
+potBody.position.y = 0.12;
+const potRim = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.09, 10), toon(POT));
+potRim.position.y = 0.27;
+const drip = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), toon(HONEY));
+drip.scale.set(0.55, 1.5, 0.55);
+drip.position.set(0.15, 0.12, 0.06);
+potGrp.add(potBody, potRim, drip);
 
-/* adventure backpack */
-const pack = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), toon('#f2b04e'));
-pack.scale.set(1, 1.25, 0.62);
-pack.position.set(0, 0.92, -0.5);
-pack.castShadow = true;
-const pocket = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), toon('#e8935a'));
-pocket.scale.set(1, 1, 0.6);
-pocket.position.set(0, 0.78, -0.66);
-const strapL = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.55, 6), toon('#e8935a'));
-const strapR = strapL.clone();
-strapL.position.set(-0.2, 1.0, -0.05); strapL.rotation.x = 1.15;
-strapR.position.set(0.2, 1.0, -0.05);  strapR.rotation.x = 1.15;
+headGroup.add(head, earL, earR, earInL, earInR, muzzle, nose, smile,
+  eyeL, eyeR, blushL, blushR, potGrp);
 
-const armGeo = new THREE.CapsuleGeometry(0.11, 0.3, 4, 8);
-const armL = new THREE.Mesh(armGeo, toon('#ffe0b8'));
-const armR = new THREE.Mesh(armGeo, toon('#ffe0b8'));
-armL.position.set(-0.62, 0.75, 0);
-armR.position.set(0.62, 0.75, 0);
+/* stubby mitten arms */
+const armGeo = new THREE.CapsuleGeometry(0.1, 0.2, 4, 8);
+const armL = new THREE.Mesh(armGeo, toon(FUR));
+const armR = new THREE.Mesh(armGeo, toon(FUR));
+armL.position.set(-0.5, 0.78, 0.02);
+armR.position.set(0.5, 0.78, 0.02);
 
-const footGeo = new THREE.SphereGeometry(0.18, 10, 8);
-const footL = new THREE.Mesh(footGeo, toon('#8a5a3b'));
-const footR = new THREE.Mesh(footGeo, toon('#8a5a3b'));
-footL.scale.set(1, 0.6, 1.4); footR.scale.set(1, 0.6, 1.4);
-footL.position.set(-0.24, 0.1, 0.05);
-footR.position.set(0.24, 0.1, 0.05);
+/* thin short legs + cream slipper feet, swung together while walking */
+const footGeo = new THREE.SphereGeometry(0.14, 8, 6);
+const legGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.24, 8);
+const footL = new THREE.Group();
+const footR = new THREE.Group();
+for (const f of [footL, footR]) {
+  const leg = new THREE.Mesh(legGeo, toon(FUR));
+  leg.position.y = 0.26;
+  const slipper = new THREE.Mesh(footGeo, toon(CREAM));
+  slipper.scale.set(1, 0.55, 1.5);
+  slipper.position.set(0, 0.08, 0.04);
+  f.add(leg, slipper);
+}
+footL.position.set(-0.19, 0, 0.05);
+footR.position.set(0.19, 0, 0.05);
 
 const shadowDisc = new THREE.Mesh(
   new THREE.CircleGeometry(0.55, 20),
@@ -1120,12 +1165,12 @@ for (let i = 0; i < 5; i++) {
 const gem = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: '#ff8a7a' }));
 gem.position.set(0, 0.02, 0.33);
 crown.add(gem);
-crown.position.y = 2.32;
+crown.position.y = 2.44;   // perched on the honey pot
 crown.rotation.z = 0.08;
 crown.visible = false;
 
-chara.add(shadowDisc, body, head, hair, eyeL, eyeR, blushL, blushR, glintL, glintR, mouth,
-  pack, pocket, strapL, strapR, armL, armR, footL, footR, crown);
+chara.add(shadowDisc, body, belly, tail, scarf, scarfTail, headGroup,
+  armL, armR, footL, footR, crown);
 chara.position.y = R + 0.35;
 scene.add(chara);
 
@@ -1145,6 +1190,8 @@ let heading = Math.PI;          // which way the character faces
 let faceOffset = Math.PI;       // extra turn toward the screen (intro wave)
 let walkPhase = 0;
 let speedNow = 0;
+let moveFlip = 0, moveFlipTarget = 0;   // 180° body turn while backing up
+const look = { yaw: 0, pitch: 0, timer: 1.2 };   // idle head glances
 
 canvas.addEventListener('pointerdown', unlockAudio);
 
@@ -1360,10 +1407,10 @@ const INTRO = {
   id: 'intro', tag: 'Sam', color: '#ff8a7a', silent: true,
   voice: { base: 260, range: 300 },
   pages: [
-    "Hey! Samuel Choe here — welcome to my world. 👋",
-    "Software engineer by day: building things, breaking things, and chasing whatever tech looks fun. After hours it's exploring, gaming, or a good playlist. 🎧",
+    "Hey! Sam here — welcome to my tiny world. 👋",
+    "This little planet is my happy place: islands to wander, friends to wave at, and absolutely nothing urgent to do. 🎧",
     "Current side quests: earning my pilot's license ✈️, riding motorcycles 🏍️, and collecting cultures one country at a time.",
-    "Enough about me — the islands can tell the rest. Go wander!",
+    "Enough about me — go explore! The passport in the corner keeps track of your adventure.",
   ],
 };
 const intro = { active: true };
@@ -1628,7 +1675,12 @@ function tick() {
   /* --- character animation --- */
   const faceTarget = intro.active ? Math.PI : 0;   // face the screen during the intro
   faceOffset += (faceTarget - faceOffset) * Math.min(1, dt * 5);
-  chara.rotation.y = heading + faceOffset;
+  /* pressing S turns the bear around instead of moonwalking; the last
+     direction sticks while standing still */
+  if (fwd < 0) moveFlipTarget = Math.PI;
+  else if (fwd > 0) moveFlipTarget = 0;
+  moveFlip += (moveFlipTarget - moveFlip) * Math.min(1, dt * 6);
+  chara.rotation.y = heading + faceOffset + moveFlip;
   const moving = Math.abs(speedNow) > 0.4;
   const bob = moving ? Math.abs(Math.sin(walkPhase)) * 0.14 : Math.sin(t * 2) * 0.03;
   const hop = teleport.active ? Math.sin(Math.PI * teleport.e) * 2.4 : 0;
@@ -1640,12 +1692,28 @@ function tick() {
     // waving hello 👋
     armR.rotation.x = 0;
     armR.rotation.z = 2.2 + Math.sin(t * 9) * 0.4;
-    armR.position.y = 0.95;
+    armR.position.y = 0.92;
   } else {
     armR.rotation.z = 0;
-    armR.position.y = 0.75;
+    armR.position.y = 0.78;
     armR.rotation.x = -swing;
   }
+
+  /* head: glance around while idle, look ahead while busy */
+  if (!moving && !teleport.active && faceOffset <= 0.4) {
+    look.timer -= dt;
+    if (look.timer <= 0) {
+      look.yaw = (Math.random() - 0.5) * 1.5;
+      look.pitch = (Math.random() - 0.55) * 0.4;
+      look.timer = 1.4 + Math.random() * 2.6;
+    }
+  } else {
+    look.yaw = 0; look.pitch = 0;
+    look.timer = Math.min(look.timer, 0.5);
+  }
+  headGroup.rotation.y += (look.yaw - headGroup.rotation.y) * Math.min(1, dt * 3.5);
+  headGroup.rotation.x += (look.pitch - headGroup.rotation.x) * Math.min(1, dt * 3.5);
+  headGroup.rotation.z = moving ? Math.sin(walkPhase) * 0.05 : Math.sin(t * 1.3) * 0.025;
   footL.position.z = 0.05 + (moving ? Math.sin(walkPhase) * 0.18 : 0);
   footR.position.z = 0.05 + (moving ? -Math.sin(walkPhase) * 0.18 : 0);
   chara.rotation.z = moving ? Math.sin(walkPhase) * 0.04 : 0;
