@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Samuel Choe | Software Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F9F6EF;
+    --mustard: #EDAA3A;
+    --ink: #1C3A4B;
+    --teal: #2E7D66;
+    --coral: #E4572E;
+    --muted: #7a8790;
+    --card-shadow: 0 10px 30px rgba(28,58,75,.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--mustard);
+    font-family: 'Poppins', sans-serif;
+    color: var(--ink);
+    padding: 40px;
+  }
+  .canvas {
+    background: var(--cream);
+    max-width: 1240px;
+    margin: 0 auto;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  section { padding: 90px 64px; }
+  h2 { font-size: 42px; font-weight: 700; }
+  .section-sub { color: var(--muted); font-size: 15px; margin-top: 8px; }
+  a { color: inherit; }
+
+  /* ============ nav ============ */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32px 64px 0;
+  }
+  .logo { font-family: 'Caveat', cursive; font-size: 34px; font-weight: 600; }
+  .nav-links { display: flex; gap: 34px; align-items: center; }
+  .nav-links a {
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 6px 18px;
+    border: 1.5px solid transparent;
+    border-radius: 999px;
+    transition: color .2s ease, border-color .2s ease;
+  }
+  .nav-links a:hover {
+    color: var(--teal);
+    border-left-color: rgba(46,125,102,.45);
+    border-right-color: rgba(46,125,102,.45);
+  }
+  .nav-links a.active {
+    color: var(--teal);
+    border: 1.5px solid var(--teal);
+    border-radius: 999px;
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+  }
+  .nav-contact { display: flex; align-items: center; gap: 14px; font-size: 13px; font-weight: 500; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: #fff; display: grid; place-items: center;
+    box-shadow: var(--card-shadow);
+    text-decoration: none;
+  }
+  .hamburger { display: none; background: none; border: none; font-size: 26px; color: var(--ink); cursor: pointer; }
+
+  /* ============ hero ============ */
+  .hero {
+    position: relative;
+    padding: 72px 64px 0;
+    min-height: 660px;
+    overflow: hidden;
+  }
+  h1 {
+    font-size: 64px;
+    line-height: 1.12;
+    font-weight: 700;
+    max-width: 480px;
+    position: relative;
+    z-index: 3;
+  }
+  .tagline {
+    position: absolute;
+    top: 110px; right: 64px;
+    width: 210px;
+    font-size: 14px;
+    line-height: 1.7;
+    z-index: 3;
+  }
+  .email {
+    position: absolute;
+    top: 330px; left: 64px;
+    color: var(--coral);
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 3;
+  }
+  .years {
+    position: absolute;
+    bottom: 64px; left: 64px;
+    display: flex; align-items: center; gap: 10px;
+    z-index: 3;
+  }
+  .years b { font-size: 56px; font-weight: 700; }
+  .years span { font-size: 12px; letter-spacing: .1em; line-height: 1.5; }
+
+  .figure {
+    position: absolute;
+    left: 50%; bottom: 0;
+    transform: translateX(-50%);
+    width: 560px; height: 520px;
+    z-index: 2;
+  }
+  .figure .brush {
+    position: absolute;
+    left: 50%; margin-left: -170px; bottom: -100px;
+    width: 340px;
+    transform: rotate(14deg) scaleX(-1.35) scaleY(-1);
+  }
+  /* placeholder silhouette — replace with your background-removed photo:
+     <img class="person-photo" src="assets/me.png" alt="Samuel Choe"> */
+  .person {
+    position: absolute;
+    left: 50%; bottom: 0;
+    transform: translateX(-50%);
+    width: 300px; height: 380px;
+  }
+  .person .head { width: 130px; height: 150px; background: #C9BDA8; border-radius: 60px 60px 52px 52px; margin: 0 auto; }
+  .person .body { width: 300px; height: 240px; background: #C9BDA8; border-radius: 110px 110px 0 0; margin-top: -10px; }
+
+  .badge {
+    position: absolute;
+    right: 96px; bottom: 150px;
+    text-align: center;
+    width: 200px;
+    z-index: 3;
+  }
+  .badge svg { width: 110px; height: 110px; }
+  .badge p { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-top: 10px; line-height: 1.5; }
+
+  /* ============ services ============ */
+  .services { background: #fff; }
+  .services-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 72px;
+    align-items: start;
+  }
+  .service-card {
+    display: flex; align-items: center; gap: 18px;
+    background: var(--cream);
+    border-radius: 16px;
+    padding: 22px 26px;
+    box-shadow: var(--card-shadow);
+  }
+  .service-card + .service-card { margin-top: 20px; }
+  .service-card .dot {
+    flex: none;
+    width: 52px; height: 52px; border-radius: 50%;
+    display: grid; place-items: center;
+    color: #fff; font-size: 20px;
+  }
+  .service-card h3 { font-size: 17px; }
+  .service-card small { color: var(--muted); font-size: 13px; }
+  .services-copy p { margin-top: 20px; line-height: 1.9; font-size: 15px; max-width: 520px; }
+
+  /* ============ experience ============ */
+  .experience h2 { text-align: center; }
+  .timeline { max-width: 900px; margin: 64px auto 0; position: relative; }
+  .timeline::before {
+    content: "";
+    position: absolute;
+    left: 50%; top: 8px; bottom: 8px;
+    border-left: 2px dashed rgba(28,58,75,.25);
+  }
+  .entry {
+    display: grid;
+    grid-template-columns: 1fr 56px 1fr;
+    margin-bottom: 56px;
+  }
+  .entry .when { text-align: right; padding-right: 8px; }
+  .entry .when h3 { font-size: 20px; }
+  .entry .when small { color: var(--muted); font-size: 13px; }
+  .entry .node { display: flex; justify-content: center; }
+  .entry .node i {
+    width: 18px; height: 18px; border-radius: 50%;
+    outline: 2px dashed rgba(28,58,75,.25);
+    outline-offset: 5px;
+    margin-top: 4px;
+  }
+  .entry .what h3 { font-size: 20px; }
+  .entry .what p { font-size: 14px; line-height: 1.8; color: var(--muted); margin-top: 8px; max-width: 380px; }
+
+  /* ============ works ============ */
+  .works { background: #fff; }
+  .works-head { display: flex; align-items: flex-end; justify-content: space-between; }
+  .link-coral {
+    color: var(--coral);
+    font-size: 14px; font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .works-row {
+    display: flex; gap: 28px;
+    margin-top: 48px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 12px;
+  }
+  .work-card {
+    flex: none;
+    width: 400px; height: 300px;
+    border-radius: 20px;
+    scroll-snap-align: start;
+    padding: 26px 30px;
+    color: #fff;
+    display: flex; flex-direction: column;
+    text-decoration: none;
+  }
+  .work-card h3 { font-size: 22px; }
+  .work-card small { opacity: .85; font-size: 13px; }
+  .work-card .shot {
+    flex: 1;
+    margin-top: 18px;
+    background: rgba(255,255,255,.92);
+    border-radius: 12px;
+    display: grid; place-items: center;
+    color: var(--muted); font-size: 13px;
+  }
+  .bg-mustard { background: var(--mustard); }
+  .bg-teal { background: var(--teal); }
+  .bg-coral { background: var(--coral); }
+  .bg-ink { background: var(--ink); }
+
+  /* ============ testimonials ============ */
+  .testimonials h2, .testimonials .section-sub { text-align: center; }
+  .quotes {
+    display: flex; gap: 28px;
+    margin-top: 72px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .quote {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: var(--card-shadow);
+    padding: 56px 30px 28px;
+    width: 330px;
+    position: relative;
+    text-align: center;
+  }
+  .quote .avatar {
+    position: absolute;
+    top: -32px; left: 50%;
+    transform: translateX(-50%);
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    border: 5px solid var(--cream);
+    display: grid; place-items: center;
+    color: #fff; font-weight: 600; font-size: 20px;
+  }
+  .quote p { font-size: 14px; line-height: 1.8; color: var(--muted); }
+  .quote h4 { margin-top: 18px; font-size: 15px; }
+  .quote small { color: var(--muted); font-size: 12px; }
+
+  /* ============ footer ============ */
+  footer { padding: 90px 64px 40px; }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 72px;
+  }
+  .footer-cta h2 { font-size: 34px; max-width: 380px; }
+  .footer-cta p { margin-top: 18px; font-size: 15px; }
+  .footer-col h5 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 16px; }
+  .footer-col a, .footer-col span {
+    display: block;
+    font-size: 13px; color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 10px;
+  }
+  .footer-base {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 72px; padding-top: 24px;
+    border-top: 1px solid rgba(28,58,75,.1);
+    font-size: 12px; color: var(--muted);
+  }
+  .footer-base .logo { font-size: 26px; color: var(--ink); }
+
+  /* ============ responsive ============ */
+  @media (max-width: 980px) {
+    body { padding: 16px; }
+    section, nav, footer { padding-left: 28px; padding-right: 28px; }
+    .nav-links, .nav-contact { display: none; }
+    .hamburger { display: block; }
+    .nav-links.open {
+      display: flex; flex-direction: column;
+      position: absolute; top: 90px; right: 40px;
+      background: #fff; padding: 24px 32px;
+      border-radius: 16px; box-shadow: var(--card-shadow);
+      z-index: 10;
+    }
+    h1 { font-size: 44px; }
+    .hero { min-height: auto; padding-bottom: 0; }
+    .tagline { position: static; width: auto; margin-top: 18px; max-width: 320px; }
+    .email { position: static; display: inline-block; margin-top: 18px; }
+    .years { position: static; margin-top: 24px; }
+    .figure { position: relative; left: 0; transform: none; width: 100%; height: 420px; margin-top: 12px; }
+    .badge { display: none; }
+    .services-grid { grid-template-columns: 1fr; gap: 48px; }
+    .timeline::before { left: 9px; }
+    .entry { grid-template-columns: 20px 1fr; gap: 0 18px; }
+    .entry .when { grid-column: 2; text-align: left; padding: 0 0 6px; }
+    .entry .node { grid-column: 1; grid-row: 1 / span 2; justify-content: flex-start; }
+    .entry .what { grid-column: 2; }
+    .footer-grid { grid-template-columns: 1fr; gap: 40px; }
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <nav>
+    <div class="logo">Sam</div>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#experience">Experience</a>
+      <a href="#works">Works</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-contact">
+      +1 (213) 925 0245
+      <a class="icon-btn" href="tel:+12139250245" aria-label="Call">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C3A4B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+      </a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>Hey there,<br>I&rsquo;m Sam</h1>
+    <p class="tagline">I build clean, reliable software.</p>
+    <a class="email" href="mailto:samuel.choe99@gmail.com">samuel.choe99@gmail.com</a>
+    <div class="years"><b>4</b><span>YEARS<br>EXPERIENCE</span></div>
+
+    <div class="figure">
+      <img class="brush" src="assets/brush-smear.svg" alt="">
+      <div class="person">
+        <div class="head"></div>
+        <div class="body"></div>
+      </div>
+    </div>
+
+    <div class="badge">
+      <svg viewBox="0 0 120 120">
+        <defs>
+          <path id="ring" d="M 60,60 m -44,0 a 44,44 0 1,1 88,0 a 44,44 0 1,1 -88,0"/>
+        </defs>
+        <circle cx="60" cy="60" r="56" fill="none" stroke="#1C3A4B" stroke-width="1" stroke-dasharray="3 4"/>
+        <text font-size="9" letter-spacing="1.5" fill="#1C3A4B" font-family="Poppins, sans-serif" font-weight="600">
+          <textPath href="#ring" textLength="272" lengthAdjust="spacing">SAMUEL CHOE &#183; PORTFOLIO &#183; EST 2026 &#183;</textPath>
+        </text>
+        <text x="60" y="67" text-anchor="middle" font-size="22" font-weight="700" fill="#1C3A4B" font-family="Poppins, sans-serif">SC</text>
+      </svg>
+      <p>Software<br>Developer</p>
+    </div>
+  </section>
+
+  <section class="services" id="services">
+    <div class="services-grid">
+      <div>
+        <div class="service-card">
+          <div class="dot" style="background:var(--teal)">&#123;&#125;</div>
+          <div><h3>Web Development</h3></div>
+        </div>
+        <div class="service-card">
+          <div class="dot" style="background:var(--mustard)">&#9881;</div>
+          <div><h3>Automation &amp; Tooling</h3></div>
+        </div>
+        <div class="service-card">
+          <div class="dot" style="background:var(--coral)">&#9635;</div>
+          <div><h3>Data &amp; Integrations</h3></div>
+        </div>
+      </div>
+      <div class="services-copy">
+        <h2>What do I do?</h2>
+        <p>I build software end to end. I scope the problem, ship a working version fast, and iterate until it&rsquo;s something that holds up. Most of my work sits at the intersection of web apps, data, and automation.</p>
+        <p>Lately that&rsquo;s meant market data pipelines and dashboards, browser automation, scheduled bots that run themselves on a VPS, and the occasional interactive 3D experiment.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="experience" id="experience">
+    <h2>My Experience</h2>
+    <div class="timeline">
+      <div class="entry">
+        <div class="when"><h3>US Army</h3><small>2021 &mdash; 2023</small></div>
+        <div class="node"><i style="background:var(--teal)"></i></div>
+        <div class="what"><h3>Logistics Specialist</h3><p>Coordinated supply operations and inventory accountability, running processes where mistakes are expensive and deadlines are not suggestions.</p></div>
+      </div>
+      <div class="entry">
+        <div class="when"><h3>Era Solutions</h3><small>2023 &mdash; 2025</small></div>
+        <div class="node"><i style="background:var(--coral)"></i></div>
+        <div class="what"><h3>Software Engineer</h3><p>Shipped features, fixed bugs, and maintained internal tools across the stack as part of a small engineering team.</p></div>
+      </div>
+      <div class="entry">
+        <div class="when"><h3>Auspice Labs LLC</h3><small>2026 &mdash; Present</small></div>
+        <div class="node"><i style="background:var(--mustard)"></i></div>
+        <div class="what"><h3>Founder</h3><p>Building automation products under my own company. Current focus: content pipelines and scheduled systems.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="works" id="works">
+    <div class="works-head">
+      <div>
+        <h2>My Latest Works</h2>
+        <p class="section-sub">A few things I&rsquo;ve built recently</p>
+      </div>
+      <a class="link-coral" href="#">Explore More &rarr;</a>
+    </div>
+    <div class="works-row">
+      <a class="work-card bg-teal" href="#">
+        <h3>World-folio</h3>
+        <small>Interactive 3D portfolio in three.js</small>
+        <div class="shot">screenshot goes here</div>
+      </a>
+      <a class="work-card bg-mustard" href="#">
+        <h3>[Project Name]</h3>
+        <small>[Short descriptor]</small>
+        <div class="shot">screenshot goes here</div>
+      </a>
+      <a class="work-card bg-coral" href="#">
+        <h3>[Project Name]</h3>
+        <small>[Short descriptor]</small>
+        <div class="shot">screenshot goes here</div>
+      </a>
+      <a class="work-card bg-ink" href="#">
+        <h3>[Project Name]</h3>
+        <small>[Short descriptor]</small>
+        <div class="shot">screenshot goes here</div>
+      </a>
+    </div>
+  </section>
+
+  <section class="testimonials">
+    <h2>People talk about my work</h2>
+    <p class="section-sub">A few words from people I&rsquo;ve worked with</p>
+    <div class="quotes">
+      <div class="quote">
+        <div class="avatar" style="background:var(--teal)">A</div>
+        <p>&ldquo;Sam is the person you hand the vague, gnarly ticket to. He asks the right questions up front, ships something working fast, and his code is easy to review and easier to maintain.&rdquo;</p>
+        <h4>Andrew</h4><small>Backend Engineer</small>
+      </div>
+      <div class="quote">
+        <div class="avatar" style="background:var(--coral)">Y</div>
+        <p>&ldquo;An engineer who actually cares how things feel to use. Sam takes design feedback seriously, catches details I&rsquo;d expect to fight for, and the handoff is always smooth.&rdquo;</p>
+        <h4>Yue</h4><small>UX Designer</small>
+      </div>
+      <div class="quote">
+        <div class="avatar" style="background:var(--mustard)">C</div>
+        <p>&ldquo;Working with Sam made my job easier. Clean APIs, sensible docs, and when something broke he was already on it before I finished writing the bug report.&rdquo;</p>
+        <h4>Cal</h4><small>Frontend Engineer</small>
+      </div>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <div class="footer-grid">
+      <div class="footer-cta">
+        <h2>Let&rsquo;s make something great together.</h2>
+        <p>Start by <a class="link-coral" href="mailto:samuel.choe99@gmail.com">saying hi</a>.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Links</h5>
+        <a href="#services">Services</a>
+        <a href="#experience">Experience</a>
+        <a href="#works">Works</a>
+      </div>
+      <div class="footer-col">
+        <h5>Elsewhere</h5>
+        <a href="#">[GitHub]</a>
+        <a href="#">[LinkedIn]</a>
+        <span>samuel.choe99@gmail.com</span>
+      </div>
+    </div>
+    <div class="footer-base">
+      <div class="logo">Sam</div>
+      <span>&copy; 2026 Samuel Choe. All rights reserved.</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  const navLinks = [...document.querySelectorAll('.nav-links a')];
+  const sections = navLinks.map(a => document.querySelector(a.hash)).filter(Boolean)
+    .sort((a, b) => a.offsetTop - b.offsetTop); // page order, not navbar order
+
+  function setActive(hash) {
+    navLinks.forEach(a => a.classList.toggle('active', a.hash === hash));
+  }
+
+  let clickLock = 0;
+  function onScroll() {
+    if (Date.now() < clickLock) return;
+    // near the bottom of the page, the last section (contact) wins even if it's short
+    if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) {
+      setActive('#' + sections[sections.length - 1].id);
+      return;
+    }
+    const probe = window.scrollY + window.innerHeight * 0.35;
+    let current = null;
+    for (const s of sections) {
+      if (s.offsetTop <= probe) current = s;
+    }
+    setActive(current ? '#' + current.id : '');
+  }
+
+  navLinks.forEach(a => a.addEventListener('click', () => {
+    setActive(a.hash);
+    clickLock = Date.now() + 800; // let smooth scroll finish before scrollspy takes over
+    document.querySelector('.nav-links').classList.remove('open');
+  }));
+
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+</script>
+</body>
+</html>

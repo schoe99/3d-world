@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Samuel Choe — Welcome to My World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #fff9e6;
+    --cocoa: #7b6247;
+    --cocoa-light: #a08a6f;
+    --leaf: #7ac74f;
+    --coral: #ff8a7a;
+    --sky-hi: #a8dcf5;
+    --sky-lo: #e6f7ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'Fredoka', system-ui, sans-serif;
+    background: linear-gradient(180deg, var(--sky-hi) 0%, #c6ecff 55%, var(--sky-lo) 100%);
+    color: var(--cocoa);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  canvas#scene { position: fixed; inset: 0; display: block; }
+
+  /* soft sun glow in the sky */
+  #sun {
+    position: fixed;
+    top: -140px; right: -100px;
+    width: 420px; height: 420px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 244, 200, 0.95) 0%, rgba(255, 240, 190, 0.35) 45%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ---------- loader ---------- */
+  #loader {
+    position: fixed; inset: 0; z-index: 100;
+    background: linear-gradient(180deg, var(--sky-hi), var(--sky-lo));
+    display: flex; flex-direction: column; gap: 14px;
+    align-items: center; justify-content: center;
+    transition: opacity 0.8s ease, visibility 0.8s;
+  }
+  #loader.done { opacity: 0; visibility: hidden; }
+  #loader .ball {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: conic-gradient(#58b4e0 0 25%, #86d36f 25% 50%, #58b4e0 50% 75%, #86d36f 75%);
+    animation: roll 1.1s linear infinite;
+    box-shadow: 0 6px 0 rgba(123, 98, 71, 0.15);
+  }
+  @keyframes roll { to { transform: rotate(360deg); } }
+  #loader span { font-weight: 600; letter-spacing: 0.14em; font-size: 14px; }
+
+  /* ---------- HUD ---------- */
+  .hud { position: fixed; z-index: 20; }
+
+  #title {
+    top: 22px; left: 26px;
+    background: var(--cream);
+    border: 3px solid rgba(123, 98, 71, 0.25);
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-size: 19px; font-weight: 700;
+    box-shadow: 0 5px 0 rgba(123, 98, 71, 0.15);
+  }
+  #title em { font-style: normal; color: var(--coral); }
+
+  #controls {
+    top: 24px; right: 26px;
+    background: var(--cream);
+    border: 3px solid rgba(123, 98, 71, 0.25);
+    border-radius: 18px;
+    padding: 12px 18px;
+    font-size: 13.5px; font-weight: 500;
+    box-shadow: 0 5px 0 rgba(123, 98, 71, 0.15);
+    line-height: 1.9;
+  }
+  #controls b {
+    display: inline-block;
+    background: #f3e7c8;
+    border: 2px solid rgba(123, 98, 71, 0.25);
+    border-bottom-width: 3px;
+    border-radius: 7px;
+    padding: 0 7px;
+    font-size: 12px;
+    margin-right: 3px;
+  }
+
+  /* ---------- passport / stamps ---------- */
+  #passport {
+    bottom: 24px; left: 26px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  #passport .head { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; opacity: 0.75; padding-left: 4px; }
+  .stamp {
+    display: flex; align-items: center; gap: 9px;
+    background: var(--cream);
+    border: 2.5px solid rgba(123, 98, 71, 0.22);
+    border-radius: 999px;
+    padding: 6px 16px 6px 9px;
+    font-size: 13.5px; font-weight: 600;
+    box-shadow: 0 4px 0 rgba(123, 98, 71, 0.12);
+    opacity: 0.55;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .stamp .dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #e8ddc4;
+    border: 2px solid rgba(123, 98, 71, 0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #fff;
+  }
+  .stamp.visited { opacity: 1; transform: translateX(4px); }
+  .stamp.visited .dot { background: var(--leaf); border-color: #5cab54; }
+  .stamp.visited .dot::after { content: '✓'; font-weight: 700; }
+  .stamp.visited {
+    cursor: pointer;
+  }
+  .stamp.visited:hover {
+    transform: translateX(8px) scale(1.04);
+    border-color: var(--coral);
+    box-shadow: 0 4px 0 rgba(123, 98, 71, 0.12), 0 0 14px rgba(255, 138, 122, 0.35);
+  }
+  .stamp.visited:active { transform: translateX(8px) scale(0.97); }
+
+  /* friends (NPCs) — trackable but not clickable */
+  .stamp.friend { cursor: default; }
+  .stamp.friend.met { opacity: 1; transform: translateX(4px); }
+  .stamp.friend.met .dot { background: #58b4e0; border-color: #4a9cc4; }
+  .stamp.friend.met .dot::after { content: '♥'; font-size: 10px; font-weight: 700; color: #fff; }
+
+  /* quests */
+  .quest {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    background: var(--cream);
+    border: 2.5px solid rgba(123, 98, 71, 0.22);
+    border-radius: 14px;
+    padding: 7px 14px;
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 0 rgba(123, 98, 71, 0.12);
+  }
+  .quest b { color: var(--coral); font-weight: 700; }
+  .quest.done { border-color: var(--leaf); }
+  .quest.done b { color: #5cab54; }
+
+  /* quest toast */
+  #toast {
+    position: fixed;
+    top: 92px; left: 50%;
+    transform: translateX(-50%) translateY(-16px) scale(0.9);
+    z-index: 70;
+    background: var(--cream);
+    border: 3px solid var(--coral);
+    border-radius: 999px;
+    padding: 12px 28px;
+    font-size: 16px; font-weight: 700;
+    color: var(--cocoa);
+    box-shadow: 0 6px 0 rgba(123, 98, 71, 0.18), 0 14px 30px rgba(80, 110, 140, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+  #mute {
+    bottom: 24px; right: 26px;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--cream);
+    border: 3px solid rgba(123, 98, 71, 0.25);
+    box-shadow: 0 5px 0 rgba(123, 98, 71, 0.15);
+    font-size: 21px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s;
+    font-family: inherit;
+  }
+  #mute:hover { transform: scale(1.08); }
+  #mute:active { transform: scale(0.95) translateY(3px); box-shadow: 0 2px 0 rgba(123, 98, 71, 0.15); }
+
+  /* ---------- Animal Crossing dialogue ---------- */
+  #dialog {
+    position: fixed;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(30px) scale(0.92);
+    width: min(680px, calc(100vw - 48px));
+    z-index: 30;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s;
+  }
+  #dialog.open {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  #dialog .bubble {
+    position: relative;
+    background: var(--cream);
+    border-radius: 30px;
+    padding: 30px 34px 26px;
+    min-height: 118px;
+    box-shadow:
+      0 8px 0 rgba(123, 98, 71, 0.18),
+      inset 0 0 0 3px rgba(123, 98, 71, 0.1),
+      0 20px 45px rgba(80, 110, 140, 0.25);
+  }
+  #dialog .nametag {
+    position: absolute;
+    top: -18px; left: 26px;
+    background: var(--coral);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 7px 20px;
+    border-radius: 999px 999px 999px 4px;
+    box-shadow: 0 4px 0 rgba(123, 98, 71, 0.2);
+    letter-spacing: 0.03em;
+    transform: rotate(-2deg);
+  }
+  #dialog .text {
+    font-size: 17.5px;
+    font-weight: 500;
+    line-height: 1.65;
+    color: var(--cocoa);
+    min-height: 58px;
+  }
+  #dialog .text a { color: #3f9ad1; font-weight: 600; }
+  #dialog .next {
+    position: absolute;
+    bottom: 12px; right: 22px;
+    font-size: 15px;
+    color: var(--cocoa-light);
+    animation: bob 0.9s ease-in-out infinite;
+  }
+  @keyframes bob { 50% { transform: translateY(4px); } }
+  #dialog .hint {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: rgba(123, 98, 71, 0.65);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  }
+
+  /* ---------- toast for first-time hint ---------- */
+  @media (max-width: 760px) {
+    #controls { display: none; }
+    #passport .stamp { font-size: 12px; padding: 5px 12px 5px 7px; }
+    #title { font-size: 16px; padding: 8px 16px; }
+  }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<div id="sun"></div>
+<canvas id="scene"></canvas>
+
+<div id="loader"><div class="ball"></div><span>PACKING BAGS…</span></div>
+
+<div class="hud" id="title">🌍 <em>Sam's</em> World-folio</div>
+
+<div class="hud" id="controls">
+  <b>W</b><b>A</b><b>S</b><b>D</b> or arrows — waddle around<br>
+  <b>E</b> / click — next page
+</div>
+
+<div class="hud" id="passport">
+  <div class="head">QUESTS</div>
+  <div class="quest" id="q-explore"><span>🗺️ World Explorer</span><b id="q-explore-n">0/5</b></div>
+  <div class="quest" id="q-friends"><span>🐚 Friend of the Sea</span><b id="q-friends-n">0/4</b></div>
+  <div class="head" style="margin-top:6px">PASSPORT · click a stamp to travel</div>
+  <!-- stamps injected by JS -->
+</div>
+
+<div id="toast"></div>
+
+<button class="hud" id="mute" title="Toggle voice blips">🔊</button>
+
+<div id="dialog">
+  <div class="bubble">
+    <div class="nametag" id="dlg-name">???</div>
+    <div class="text" id="dlg-text"></div>
+    <div class="next" id="dlg-next" style="display:none">▼</div>
+  </div>
+  <div class="hint" id="dlg-hint">press E / click to continue</div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ================================================================
+   CONTENT — the five island-continents
+   ================================================================ */
+const SPOTS = [
+  {
+    id: 'home', name: 'Home Isle', tag: 'Sam',
+    color: '#ff8a7a', lat: 18, lon: 0, size: 1.0, theme: 'grass',
+    pages: [
+      "Home sweet home — this is where the adventure starts. 🌱",
+      "Fun fact: everything here — the islands, the ocean friends, the waves — is one hand-built Three.js scene. No game engine, just code.",
+      "Your passport (bottom-left) tracks where you've been. Once an island is stamped, click it to fly back anytime!",
+    ],
+  },
+  {
+    id: 'signal', name: 'Signal Peaks', tag: 'Project 01',
+    color: '#7f9bd1', lat: -16, lon: 72, size: 1.15, theme: 'mountain',
+    pages: [
+      "⛰️ Signal Peaks — home of the Market Intelligence Platform.",
+      "It ingests live equities data on a schedule, sniffs out anomalies, and serves it all up on a dashboard. Python, PostgreSQL, and a healthy respect for cron.",
+      "Phases 0–2 shipped. The mountain keeps growing…",
+    ],
+  },
+  {
+    id: 'crypto', name: 'Crypto Cove', tag: 'Project 02',
+    color: '#f2b04e', lat: 18, lon: 144, size: 0.95, theme: 'beach',
+    pages: [
+      "🏝️ Crypto Cove — the Crypto Analytics Engine lives here.",
+      "A parallel branch of the platform tracking crypto markets in real time. WebSockets, git worktrees, and the occasional midnight deploy.",
+      "It runs in its own little universe and merges back at milestones. Just like this island.",
+    ],
+  },
+  {
+    id: 'skills', name: 'Toolbox Tundra', tag: 'Skills',
+    color: '#8fd7e8', lat: -16, lon: -144, size: 1.05, theme: 'snow',
+    pages: [
+      "❄️ Toolbox Tundra — everything I pack for an expedition.",
+      "Python · TypeScript · SQL · Three.js · Docker · Git — plus data pipelines, WebGL, and the patience to debug all of the above.",
+      "Cold climate, warm stack.",
+    ],
+  },
+  {
+    id: 'contact', name: 'Hello Harbor', tag: 'Contact',
+    color: '#e4906e', lat: 18, lon: -72, size: 0.85, theme: 'autumn',
+    pages: [
+      "🗼 Hello Harbor — the lighthouse is always on.",
+      "Want to build something together? Send a letter to samuel.choe99@gmail.com — I read every one!",
+    ],
+  },
+];
+
+/* ================================================================
+   RENDERER / SCENE / CAMERA
+   ================================================================ */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+
+// wide FOV close to the surface = the fish-eye tiny-planet look
+const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 300);
+
+/* toon lighting */
+scene.add(new THREE.HemisphereLight(0xdff3ff, 0xb8dba0, 0.95));
+const sun = new THREE.DirectionalLight(0xfff2d0, 1.6);
+sun.position.set(30, 45, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -35; sun.shadow.camera.right = 35;
+sun.shadow.camera.top = 35;  sun.shadow.camera.bottom = -35;
+sun.shadow.camera.far = 120;
+scene.add(sun);
+
+/* 3-step gradient map => cel shading */
+const gradData = new Uint8Array([90, 180, 255]);
+const gradientMap = new THREE.DataTexture(gradData, 3, 1, THREE.RedFormat);
+gradientMap.minFilter = gradientMap.magFilter = THREE.NearestFilter;
+gradientMap.needsUpdate = true;
+const toon = (color) => new THREE.MeshToonMaterial({ color, gradientMap });
+
+/* ================================================================
+   THE PLANET
+   ================================================================ */
+const R = 14;
+const planet = new THREE.Group();
+scene.add(planet);
+
+/* meshes the character can stand on (terrain + climbable rocks) */
+const walkables = [];
+
+const ocean = new THREE.Mesh(new THREE.SphereGeometry(R, 64, 64), toon('#58b4e0'));
+ocean.receiveShadow = true;
+planet.add(ocean);
+walkables.push(ocean);
+
+// subtle darker water ring at the "horizon" of each continent comes free from toon shading
+
+function latLonToDir(lat, lon) {
+  const phi = (90 - lat) * Math.PI / 180;
+  const theta = (lon + 180) * Math.PI / 180;
+  return new THREE.Vector3(
+    Math.sin(phi) * Math.cos(theta),
+    Math.cos(phi),
+    Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+const UP = new THREE.Vector3(0, 1, 0);
+const THEMES = {
+  grass:    { land: '#86d36f', rim: '#f6e0a3', deco: 'tree'      },
+  mountain: { land: '#8fce74', rim: '#f6e0a3', deco: 'mountain'  },
+  beach:    { land: '#f6dfa0', rim: '#fbeec4', deco: 'palm'      },
+  snow:     { land: '#f0f7fb', rim: '#dceef7', deco: 'snowtree'  },
+  autumn:   { land: '#f2a65a', rim: '#f6e0a3', deco: 'lighthouse'},
+};
+
+/* ---- little props ------------------------------------------------ */
+function makeTree(scale = 1, leafColor = '#5cab54') {
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14 * scale, 0.2 * scale, 0.8 * scale, 8), toon('#9a6b45'));
+  trunk.position.y = 0.4 * scale;
+  const l1 = new THREE.Mesh(new THREE.SphereGeometry(0.62 * scale, 12, 10), toon(leafColor));
+  l1.position.y = 1.05 * scale;
+  const l2 = new THREE.Mesh(new THREE.SphereGeometry(0.42 * scale, 12, 10), toon(leafColor));
+  l2.position.y = 1.5 * scale;
+  g.add(trunk, l1, l2);
+  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; } });
+  g.userData.propSlot = 'prop-tree';
+  return g;
+}
+
+function makePalm(scale = 1) {
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1 * scale, 0.16 * scale, 1.5 * scale, 8), toon('#b98c5e'));
+  trunk.position.y = 0.75 * scale;
+  trunk.rotation.z = 0.14;
+  g.add(trunk);
+  for (let i = 0; i < 5; i++) {
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.5 * scale, 8, 6), toon('#69c25f'));
+    leaf.scale.set(1.5, 0.28, 0.5);
+    const a = (i / 5) * Math.PI * 2;
+    leaf.position.set(Math.cos(a) * 0.55 * scale + 0.2, 1.55 * scale, Math.sin(a) * 0.55 * scale);
+    leaf.rotation.y = -a;
+    leaf.rotation.z = 0.35;
+    g.add(leaf);
+  }
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  g.userData.propSlot = 'prop-palm';
+  return g;
+}
+
+function makeMountain(scale = 1) {
+  const g = new THREE.Group();
+  const rock = new THREE.Mesh(new THREE.ConeGeometry(1.1 * scale, 2.4 * scale, 7), toon('#a9b4c2'));
+  rock.position.y = 1.2 * scale;
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.5 * scale, 1.0 * scale, 7), toon('#ffffff'));
+  cap.position.y = 2.35 * scale;
+  g.add(rock, cap);
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  g.userData.propSlot = 'prop-mountain';
+  return g;
+}
+
+function makeSnowTree(scale = 1) {
+  const t = makeTree(scale, '#bfe6d8');
+  t.userData.propSlot = 'prop-snowtree';
+  return t;
+}
+
+function makeLighthouse(scale = 1) {
+  const g = new THREE.Group();
+  const colors = ['#e85d4a', '#fff5e0', '#e85d4a', '#fff5e0'];
+  colors.forEach((c, i) => {
+    const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.42 * scale * (1 - i * 0.07), 0.46 * scale * (1 - i * 0.07), 0.55 * scale, 12), toon(c));
+    seg.position.y = (0.28 + i * 0.55) * scale;
+    g.add(seg);
+  });
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.3 * scale, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffe27a' }));
+  lamp.position.y = 2.55 * scale;
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(0.4 * scale, 0.5 * scale, 10), toon('#e85d4a'));
+  roof.position.y = 3.0 * scale;
+  g.add(lamp, roof);
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  g.userData.propSlot = 'prop-lighthouse';
+  return g;
+}
+
+/* ---- name-tag sprite --------------------------------------------- */
+function makeLabel(text, color) {
+  const pad = 28, fs = 46;
+  const c = document.createElement('canvas');
+  const ctx = c.getContext('2d');
+  ctx.font = `600 ${fs}px Fredoka, sans-serif`;
+  const w = Math.ceil(ctx.measureText(text).width) + pad * 2;
+  const h = fs + pad * 1.4;
+  c.width = w; c.height = h;
+  const r = h / 2;
+  ctx.font = `600 ${fs}px Fredoka, sans-serif`;
+  ctx.fillStyle = 'rgba(255, 249, 230, 0.96)';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.roundRect(4, 4, w - 8, h - 8, r);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#7b6247';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, w / 2, h / 2 + 3);
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: true }));
+  const S = 0.014;
+  spr.scale.set(w * S, h * S, 1);
+  return spr;
+}
+
+/* ---- continents --------------------------------------------------- */
+let seed = 7;
+const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+for (const spot of SPOTS) {
+  const theme = THEMES[spot.theme];
+  const dir = latLonToDir(spot.lat, spot.lon);
+  const g = new THREE.Group();
+  g.position.copy(dir.clone().multiplyScalar(R - 0.35));
+  g.quaternion.setFromUnitVectors(UP, dir);
+  spot.dir = dir;
+
+  const spread = 2.9 * spot.size;
+
+  /* --- land: one central mass + a ring of overlapping satellites,
+     so the union reads as one smooth landmass --- */
+  const blobs = [];
+  const addBlob = (ox, oz, br) => {
+    const sink = (ox * ox + oz * oz) / (2 * R);
+    blobs.push({ ox, oz, br, y0: 0.15 - sink });
+  };
+  addBlob(0, 0, 2.7 * spot.size);
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + rand() * 0.9;
+    const d = (1.5 + rand() * 0.8) * spot.size;
+    addBlob(Math.cos(a) * d, Math.sin(a) * d, (1.3 + rand() * 0.7) * spot.size);
+  }
+  // every blob gets the SAME absolute surface height (not scaled by its
+  // radius), so overlapping blobs merge into one seamless plateau instead
+  // of stacked domes of different heights
+  const LAND_H = 0.6, RIM_H = 0.3;
+  for (const b of blobs) {
+    const rim = new THREE.Mesh(new THREE.SphereGeometry(b.br * 1.3, 22, 16), toon(theme.rim));
+    rim.scale.y = RIM_H / (b.br * 1.3);
+    rim.position.set(b.ox, b.y0 - 0.15, b.oz);
+    rim.receiveShadow = true;
+    const land = new THREE.Mesh(new THREE.SphereGeometry(b.br, 22, 16), toon(theme.land));
+    land.scale.y = LAND_H / b.br;
+    land.position.set(b.ox, b.y0, b.oz);
+    land.receiveShadow = true; land.castShadow = true;
+    g.add(rim, land);
+    walkables.push(rim, land);
+  }
+
+  /* height of the land surface at a local point (0 = water) */
+  const landHeightAt = (x, z) => {
+    let h = 0;
+    for (const b of blobs) {
+      const d = Math.hypot(x - b.ox, z - b.oz);
+      if (d < b.br) h = Math.max(h, b.y0 + LAND_H * Math.sqrt(1 - (d / b.br) ** 2));
+    }
+    return h;
+  };
+
+  /* --- props: rejection-sampled with clearance circles so nothing
+     mashes together, and only on solid land --- */
+  const placed = [];
+  const placeProps = (count, minGap, build, footprint = 0, maxFrac = 1) => {
+    while (count > 0) {
+      // best-candidate sampling: among valid spots, keep the one farthest
+      // from everything already placed → props spread out evenly
+      let best = null, bestScore = -1;
+      for (let tries = 0; tries < 40; tries++) {
+        const a = rand() * Math.PI * 2;
+        const rr = Math.sqrt(rand()) * spread * 1.15 * maxFrac;
+        const x = Math.cos(a) * rr, z = Math.sin(a) * rr;
+        const h = landHeightAt(x, z);
+        if (h < 0.62) continue;   // must be well up on the land, not the beach
+        // wide props: the whole footprint must sit on land
+        if (footprint > 0) {
+          let grounded = true;
+          for (let k = 0; k < 8; k++) {
+            const aa = (k / 8) * Math.PI * 2;
+            if (landHeightAt(x + Math.cos(aa) * footprint, z + Math.sin(aa) * footprint) < 0.5) { grounded = false; break; }
+          }
+          if (!grounded) continue;
+        }
+        const clearance = placed.length
+          ? Math.min(...placed.map((p) => Math.hypot(p.x - x, p.z - z) - Math.max(p.r, minGap)))
+          : rand();
+        if (placed.length && clearance <= 0) continue;
+        if (clearance > bestScore) { bestScore = clearance; best = { x, z, h }; }
+      }
+      if (!best) break;
+      const deco = build();
+      deco.position.set(best.x, best.h - 0.08, best.z);
+      deco.rotation.y = rand() * Math.PI * 2;
+      g.add(deco);
+      placed.push({ x: best.x, z: best.z, r: minGap });
+      count--;
+    }
+  };
+  const climbable = (m) => { m.traverse((o) => { if (o.isMesh) walkables.push(o); }); return m; };
+
+  switch (theme.deco) {
+    case 'tree':
+      placeProps(5, 1.7, () => makeTree(0.75 + rand() * 0.4));
+      break;
+    case 'palm':
+      placeProps(4, 2.4, () => makePalm(0.8 + rand() * 0.35));
+      break;
+    case 'snowtree':
+      placeProps(4, 2.2, () => makeSnowTree(0.75 + rand() * 0.35));
+      break;
+    case 'mountain':
+      // mountains stay near the island's core: big footprint check + a
+      // capped scatter radius so the base can never overhang the shore
+      placeProps(2, 3.4, () => climbable(makeMountain(0.85 + rand() * 0.3)), 1.9, 0.6);
+      placeProps(3, 1.7, () => makeTree(0.65 + rand() * 0.3));
+      break;
+    case 'lighthouse': {
+      // the lighthouse stands proudly at the island's center
+      const lh = makeLighthouse(0.9);
+      lh.position.set(0, landHeightAt(0, 0) - 0.08, 0);
+      g.add(lh);
+      // clearance just big enough that trees don't clash with the tower,
+      // small enough that trees can still fit on the island
+      placed.push({ x: 0, z: 0, r: 1.7 });
+      placeProps(4, 1.9, () => makeTree(0.65 + rand() * 0.3, '#e07b4f'));
+      break;
+    }
+  }
+
+  // floating name tag
+  const label = makeLabel(spot.name, spot.color);
+  label.position.set(0, 4.6, 0);
+  g.add(label);
+  spot.label = label;
+  spot.group = g;   // custom-asset slot anchor (see ASSETS.md)
+
+  planet.add(g);
+}
+
+/* ================================================================
+   NPCS — ocean friends living between the islands
+   ================================================================ */
+const NPCS = [
+  {
+    id: 'kappy', tag: 'Kappy the Turtle', color: '#57b06b',
+    lat: -50, lon: -36, isNPC: true,
+    voice: { base: 150, range: 130 },
+    pages: [
+      "Blub… oh! A visitor! I'm Kappy. I've been swimming laps around this world for years. 🐢",
+      "Psst — once you've visited an island, you can click its stamp in the passport to fly straight back. Us turtles prefer the slow way, though.",
+    ],
+  },
+  {
+    id: 'gully', tag: 'Gully the Seagull', color: '#7fa2c9',
+    lat: 50, lon: 36, isNPC: true,
+    voice: { base: 540, range: 380 },
+    pages: [
+      "SQUAWK! Hey! Off my buoy!! …Kidding, kidding. I'm Gully. Best view of the whole ocean from up here.",
+      "Word on the waves: the human who built this place ships data pipelines by day and tiny planets by night. Weird bird, that one.",
+    ],
+  },
+  {
+    id: 'bloop', tag: 'Bloop the Whale', color: '#6f8fd1',
+    lat: 50, lon: -108, isNPC: true,
+    voice: { base: 95, range: 80 },
+    pages: [
+      "Mmmmm… hello, little one. I am Bloop. The water is very cozy today. 🐋",
+      "If you ever feel lost, look for the lighthouse at Hello Harbor. Sam always leaves the light on.",
+    ],
+  },
+  {
+    id: 'iggy', tag: 'Iggy the Penguin', color: '#5c7d99',
+    lat: -78, lon: 180, isNPC: true,
+    voice: { base: 420, range: 260 },
+    pages: [
+      "Brrr! Welcome to the bottom of the world! I'm Iggy. Not many folks waddle all the way down here. 🐧",
+      "Rumor among the fish: if you stamp every island in your passport AND befriend everyone at sea… something shiny happens. Just saying!",
+    ],
+  },
+];
+
+/* cartoon eye: white ball, pupil, glint — aims along its local +z */
+function makeEye(r = 0.05) {
+  const e = new THREE.Group();
+  const white = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
+  const pupil = new THREE.Mesh(new THREE.SphereGeometry(r * 0.55, 8, 6), new THREE.MeshBasicMaterial({ color: '#2b2b33' }));
+  pupil.position.z = r * 0.55;
+  const glint = new THREE.Mesh(new THREE.SphereGeometry(r * 0.22, 6, 6), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
+  glint.position.set(r * 0.25, r * 0.3, r * 0.95);
+  e.add(white, pupil, glint);
+  return e;
+}
+
+function makeTurtle() {
+  const g = new THREE.Group();
+  const shell = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 14), toon('#4f9e5f'));
+  shell.scale.set(1, 0.62, 1.1);
+  shell.position.y = 0.34;
+  const shellRim = new THREE.Mesh(new THREE.SphereGeometry(0.64, 16, 12), toon('#3d8a4e'));
+  shellRim.scale.set(1, 0.28, 1.1);
+  shellRim.position.y = 0.2;
+  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.56, 14, 12), toon('#e6d8a8'));
+  belly.scale.set(0.95, 0.2, 1.05);
+  belly.position.y = 0.1;
+  g.add(shell, shellRim, belly);
+  // shell plates
+  for (const [sx, sz] of [[0, 0], [0.28, 0.2], [-0.28, 0.2], [0.22, -0.3], [-0.22, -0.3]]) {
+    const plate = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), toon('#66b273'));
+    plate.scale.y = 0.35;
+    const hh = Math.sqrt(Math.max(0.05, 1 - (sx / 0.6) ** 2 - (sz / 0.66) ** 2));
+    plate.position.set(sx, 0.34 + 0.36 * hh, sz);
+    g.add(plate);
+  }
+  // head with proper eyes
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 14, 12), toon('#8fce8f'));
+  head.position.set(0, 0.3, 0.75);
+  g.add(head);
+  for (const s of [-1, 1]) {
+    const eye = makeEye(0.05);
+    eye.position.set(s * 0.1, 0.4, 0.95);
+    eye.rotation.y = s * 0.35;
+    g.add(eye);
+    const blush = new THREE.Mesh(new THREE.CircleGeometry(0.045, 8), new THREE.MeshBasicMaterial({ color: '#f0a8b8' }));
+    blush.position.set(s * 0.16, 0.28, 0.92);
+    blush.rotation.y = s * 0.8;
+    g.add(blush);
+    // front + rear flippers
+    const front = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), toon('#8fce8f'));
+    front.scale.set(1.7, 0.28, 0.75);
+    front.position.set(s * 0.58, 0.1, 0.3);
+    front.rotation.y = s * -0.55;
+    g.add(front);
+    const rear = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), toon('#8fce8f'));
+    rear.scale.set(1.4, 0.28, 0.7);
+    rear.position.set(s * 0.48, 0.08, -0.42);
+    rear.rotation.y = s * 0.6;
+    g.add(rear);
+  }
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.2, 8), toon('#8fce8f'));
+  tail.rotation.x = Math.PI / 2 + 0.4;
+  tail.position.set(0, 0.12, -0.68);
+  g.add(tail);
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+function makeBuoyGull() {
+  const g = new THREE.Group();
+  // buoy with rope trim
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.48, 0.55, 12), toon('#e85d4a'));
+  base.position.y = 0.28;
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.38, 0.3, 12), toon('#fff5e0'));
+  band.position.y = 0.7;
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 0.25, 12), toon('#e85d4a'));
+  cap.position.y = 0.97;
+  const rope = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.035, 8, 16), toon('#c9b892'));
+  rope.rotation.x = Math.PI / 2;
+  rope.position.y = 0.52;
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.45, 8), toon('#8a5a3b'));
+  pole.position.y = 1.28;
+  g.add(base, band, cap, rope, pole);
+  // the gull, perched on the pole
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 12), toon('#ffffff'));
+  body.scale.set(1, 0.95, 1.35);
+  body.position.y = 1.72;
+  const tail = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), toon('#c9d4dd'));
+  tail.scale.set(0.55, 0.18, 1.1);
+  tail.position.set(0, 1.74, -0.32);
+  tail.rotation.x = 0.25;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), toon('#ffffff'));
+  head.position.set(0, 1.98, 0.18);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.18, 8), toon('#f2a04e'));
+  beak.rotation.x = Math.PI / 2;
+  beak.position.set(0, 1.97, 0.36);
+  g.add(body, tail, head, beak);
+  for (const s of [-1, 1]) {
+    const eye = makeEye(0.038);
+    eye.position.set(s * 0.09, 2.04, 0.31);
+    eye.rotation.y = s * 0.4;
+    g.add(eye);
+    // folded wings with darker tips
+    const wing = new THREE.Mesh(new THREE.SphereGeometry(0.17, 8, 6), toon('#c9d4dd'));
+    wing.scale.set(0.38, 0.5, 1.05);
+    wing.position.set(s * 0.26, 1.7, -0.06);
+    wing.rotation.z = s * 0.25;
+    g.add(wing);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), toon('#8fa3b5'));
+    tip.scale.set(0.4, 0.35, 0.9);
+    tip.position.set(s * 0.18, 1.68, -0.3);
+    g.add(tip);
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), toon('#f2a04e'));
+    foot.scale.set(1, 0.4, 1.7);
+    foot.position.set(s * 0.08, 1.51, 0.06);
+    g.add(foot);
+  }
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+function makeWhale() {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(1.0, 18, 16), toon('#7fa8dc'));
+  body.scale.set(1, 0.78, 1.35);
+  body.position.y = 0.35;
+  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.99, 18, 16), toon('#dceaf5'));
+  belly.scale.set(0.94, 0.6, 1.3);
+  belly.position.y = 0.16;
+  g.add(body, belly);
+  for (const s of [-1, 1]) {
+    const eye = makeEye(0.09);
+    eye.position.set(s * 0.78, 0.5, 0.78);
+    eye.rotation.y = s * 0.9;
+    g.add(eye);
+    const blush = new THREE.Mesh(new THREE.CircleGeometry(0.09, 10), new THREE.MeshBasicMaterial({ color: '#f0a8b8' }));
+    blush.position.set(s * 0.88, 0.34, 0.64);
+    blush.rotation.y = s * 1.15;
+    g.add(blush);
+    // side fins
+    const fin = new THREE.Mesh(new THREE.SphereGeometry(0.36, 10, 8), toon('#6c96cf'));
+    fin.scale.set(0.9, 0.22, 0.55);
+    fin.position.set(s * 0.95, 0.12, 0.35);
+    fin.rotation.z = s * 0.55;
+    fin.rotation.y = s * -0.4;
+    g.add(fin);
+    // tail flukes, pulled in so they overlap the tail base
+    const fluke = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 8), toon('#6c96cf'));
+    fluke.scale.set(1.1, 0.2, 0.55);
+    fluke.position.set(s * 0.32, 0.56, -1.52);
+    fluke.rotation.y = s * -0.45;
+    fluke.rotation.z = s * 0.12;
+    g.add(fluke);
+  }
+  // tail base large enough to bridge body and flukes with no water gap
+  const tailBase = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), toon('#7fa8dc'));
+  tailBase.scale.set(0.85, 0.55, 1.2);
+  tailBase.position.set(0, 0.5, -1.26);
+  tailBase.rotation.x = -0.25;
+  const smile = new THREE.Mesh(
+    new THREE.TorusGeometry(0.2, 0.022, 6, 14, Math.PI),
+    new THREE.MeshBasicMaterial({ color: '#4a6b9e' })
+  );
+  smile.position.set(0, 0.32, 1.33);
+  smile.rotation.z = Math.PI;
+  g.add(tailBase, smile);
+  // spout splash
+  [[0, 1.26, 0.25, 0.14], [-0.13, 1.42, 0.22, 0.09], [0.14, 1.44, 0.28, 0.08]].forEach(([x, y, z, r]) => {
+    const puff = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), toon('#ffffff'));
+    puff.position.set(x, y, z);
+    g.add(puff);
+  });
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+function makePenguinFloes() {
+  const g = new THREE.Group();
+  // floes are squashed spheres: their rounded rims curve down into the
+  // water, so they hug the globe with no floating edges at any angle
+  const floe = new THREE.Mesh(new THREE.SphereGeometry(1.7, 18, 14), toon('#eef6fb'));
+  floe.scale.y = 0.22;
+  floe.position.y = -0.02;
+  floe.receiveShadow = true;
+  g.add(floe);
+  walkables.push(floe);
+  for (const [dx, dz, r] of [[2.5, 0.9, 0.8], [-2.1, -1.5, 0.65]]) {
+    const sink = (dx * dx + dz * dz) / (2 * R);
+    const mini = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), toon('#e2eff8'));
+    mini.scale.y = 0.35;
+    mini.position.set(dx, -0.02 - sink, dz);
+    mini.receiveShadow = true;
+    g.add(mini);
+    walkables.push(mini);
+  }
+  // the penguin
+  const p = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 14), toon('#37414d'));
+  body.scale.set(1, 1.15, 0.95);
+  body.position.y = 0.48;
+  const front = new THREE.Mesh(new THREE.SphereGeometry(0.38, 14, 12), toon('#f7fafc'));
+  front.scale.set(0.8, 1.02, 0.72);
+  front.position.set(0, 0.44, 0.13);
+  p.add(body, front);
+  for (const s of [-1, 1]) {
+    // eye centers sit INSIDE the head surface so the whites are anchored
+    // in the body — only the pupil half pokes out
+    const eye = makeEye(0.06);
+    eye.position.set(s * 0.12, 0.69, 0.28);
+    eye.rotation.y = s * 0.25;
+    p.add(eye);
+    const wing = new THREE.Mesh(new THREE.SphereGeometry(0.17, 8, 6), toon('#37414d'));
+    wing.scale.set(0.35, 1.05, 0.6);
+    wing.position.set(s * 0.4, 0.45, 0);
+    wing.rotation.z = s * -0.35;
+    p.add(wing);
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), toon('#f2a04e'));
+    foot.scale.set(1, 0.35, 1.6);
+    foot.position.set(s * 0.15, 0.02, 0.1);
+    p.add(foot);
+  }
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.18, 8), toon('#f2a04e'));
+  beak.rotation.x = Math.PI / 2;
+  beak.position.set(0, 0.62, 0.42);
+  // cozy scarf
+  const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.06, 8, 14), toon('#e85d4a'));
+  scarf.rotation.x = Math.PI / 2;
+  scarf.position.y = 0.8;
+  const scarfTail = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), toon('#e85d4a'));
+  scarfTail.scale.set(0.7, 1.6, 0.5);
+  scarfTail.position.set(0.14, 0.62, 0.3);
+  p.add(beak, scarf, scarfTail);
+  p.position.y = 0.35;
+  p.rotation.y = 0.35;
+  g.add(p);
+  g.traverse((o) => { if (o.isMesh && !walkables.includes(o)) o.castShadow = true; });
+  return g;
+}
+
+const NPC_BUILDERS = { kappy: makeTurtle, gully: makeBuoyGull, bloop: makeWhale, iggy: makePenguinFloes };
+
+const FLOATERS = [];   // everything that bobs on the waves
+for (const npc of NPCS) {
+  const dir = latLonToDir(npc.lat, npc.lon);
+  npc.dir = dir;
+  const anchor = new THREE.Group();
+  anchor.position.copy(dir.clone().multiplyScalar(R - 0.05));
+  anchor.quaternion.setFromUnitVectors(UP, dir);
+  const bobber = new THREE.Group();
+  bobber.add(NPC_BUILDERS[npc.id]());
+  anchor.add(bobber);
+  planet.add(anchor);
+  npc.bobber = bobber;
+  npc.phase = rand() * Math.PI * 2;
+  // the penguin's ice floes shouldn't pitch and roll like open water
+  FLOATERS.push({ bobber, phase: npc.phase, gentle: npc.id === 'iggy' });
+}
+
+/* a little sailboat drifting in the big empty stretch of ocean */
+function makeBoat() {
+  const g = new THREE.Group();
+  const hull = new THREE.Mesh(new THREE.SphereGeometry(0.85, 14, 12), toon('#9a6b45'));
+  hull.scale.set(0.6, 0.38, 1.25);
+  hull.position.y = 0.16;
+  const deck = new THREE.Mesh(new THREE.SphereGeometry(0.78, 14, 12), toon('#c99a6a'));
+  deck.scale.set(0.52, 0.3, 1.15);
+  deck.position.y = 0.26;
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.8, 8), toon('#7b5a3a'));
+  mast.position.y = 1.15;
+  const sailShape = new THREE.Shape();
+  sailShape.moveTo(0, 0); sailShape.lineTo(0, 1.3); sailShape.lineTo(0.9, 0); sailShape.closePath();
+  const sail = new THREE.Mesh(
+    new THREE.ShapeGeometry(sailShape),
+    new THREE.MeshToonMaterial({ color: '#fff5e0', gradientMap, side: THREE.DoubleSide })
+  );
+  sail.position.set(0, 0.72, 0.06);
+  sail.rotation.y = Math.PI / 2;
+  const flag = new THREE.Mesh(
+    new THREE.ShapeGeometry((() => { const s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(0.32, 0.09); s.lineTo(0, 0.18); s.closePath(); return s; })()),
+    new THREE.MeshToonMaterial({ color: '#ff8a7a', gradientMap, side: THREE.DoubleSide })
+  );
+  flag.position.set(0, 1.98, 0);
+  flag.rotation.y = Math.PI / 2;
+  g.add(hull, deck, mast, sail, flag);
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+let boatBobber = null;
+{
+  const dir = latLonToDir(-50, 108);
+  const anchor = new THREE.Group();
+  anchor.position.copy(dir.clone().multiplyScalar(R - 0.02));
+  anchor.quaternion.setFromUnitVectors(UP, dir);
+  const bobber = new THREE.Group();
+  bobber.add(makeBoat());
+  anchor.add(bobber);
+  planet.add(anchor);
+  boatBobber = bobber;   // custom-asset slot anchor
+  FLOATERS.push({ bobber, phase: rand() * Math.PI * 2 });
+}
+
+/* ================================================================
+   THE CHARACTER — a chibi explorer
+   ================================================================ */
+const chara = new THREE.Group();
+
+const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 14), toon('#ff8a7a'));
+body.scale.set(1, 1.15, 0.9);
+body.position.y = 0.62;
+body.castShadow = true;
+
+const head = new THREE.Mesh(new THREE.SphereGeometry(0.62, 18, 16), toon('#ffe0b8'));
+head.position.y = 1.62;
+head.castShadow = true;
+
+const hair = new THREE.Mesh(new THREE.SphereGeometry(0.64, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.52), toon('#5d4433'));
+hair.position.y = 1.72;
+
+const eyeGeo = new THREE.SphereGeometry(0.075, 8, 8);
+const eyeMat = new THREE.MeshBasicMaterial({ color: '#3a2f26' });
+const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+eyeL.scale.y = 1.5; eyeR.scale.y = 1.5;
+eyeL.position.set(-0.2, 1.62, 0.56);
+eyeR.position.set(0.2, 1.62, 0.56);
+
+const blushMat = new THREE.MeshBasicMaterial({ color: '#ffb3a0' });
+const blushL = new THREE.Mesh(new THREE.CircleGeometry(0.08, 10), blushMat);
+const blushR = new THREE.Mesh(new THREE.CircleGeometry(0.08, 10), blushMat);
+blushL.position.set(-0.36, 1.48, 0.5); blushL.rotation.y = -0.5;
+blushR.position.set(0.36, 1.48, 0.5);  blushR.rotation.y = 0.5;
+
+/* face details: eye glints + a smile */
+const glintMat = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+const glintL = new THREE.Mesh(new THREE.SphereGeometry(0.024, 6, 6), glintMat);
+const glintR = glintL.clone();
+glintL.position.set(-0.225, 1.66, 0.6);
+glintR.position.set(0.225, 1.66, 0.6);
+const mouth = new THREE.Mesh(
+  new THREE.TorusGeometry(0.07, 0.016, 6, 12, Math.PI),
+  new THREE.MeshBasicMaterial({ color: '#8a5a4a' })
+);
+mouth.position.set(0, 1.47, 0.59);
+mouth.rotation.z = Math.PI;
+
+/* adventure backpack */
+const pack = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), toon('#f2b04e'));
+pack.scale.set(1, 1.25, 0.62);
+pack.position.set(0, 0.92, -0.5);
+pack.castShadow = true;
+const pocket = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), toon('#e8935a'));
+pocket.scale.set(1, 1, 0.6);
+pocket.position.set(0, 0.78, -0.66);
+const strapL = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.55, 6), toon('#e8935a'));
+const strapR = strapL.clone();
+strapL.position.set(-0.2, 1.0, -0.05); strapL.rotation.x = 1.15;
+strapR.position.set(0.2, 1.0, -0.05);  strapR.rotation.x = 1.15;
+
+const armGeo = new THREE.CapsuleGeometry(0.11, 0.3, 4, 8);
+const armL = new THREE.Mesh(armGeo, toon('#ffe0b8'));
+const armR = new THREE.Mesh(armGeo, toon('#ffe0b8'));
+armL.position.set(-0.62, 0.75, 0);
+armR.position.set(0.62, 0.75, 0);
+
+const footGeo = new THREE.SphereGeometry(0.18, 10, 8);
+const footL = new THREE.Mesh(footGeo, toon('#8a5a3b'));
+const footR = new THREE.Mesh(footGeo, toon('#8a5a3b'));
+footL.scale.set(1, 0.6, 1.4); footR.scale.set(1, 0.6, 1.4);
+footL.position.set(-0.24, 0.1, 0.05);
+footR.position.set(0.24, 0.1, 0.05);
+
+const shadowDisc = new THREE.Mesh(
+  new THREE.CircleGeometry(0.55, 20),
+  new THREE.MeshBasicMaterial({ color: '#2d5b33', transparent: true, opacity: 0.22 })
+);
+shadowDisc.rotation.x = -Math.PI / 2;
+shadowDisc.position.y = 0.02;
+shadowDisc.userData.noExport = true;   // don't include in PNG portraits
+
+/* golden crown — the 100%-completion reward */
+const crown = new THREE.Group();
+const band = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.16, 12), toon('#f5c542'));
+crown.add(band);
+for (let i = 0; i < 5; i++) {
+  const a = (i / 5) * Math.PI * 2;
+  const spike = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.22, 6), toon('#f5c542'));
+  spike.position.set(Math.cos(a) * 0.28, 0.16, Math.sin(a) * 0.28);
+  crown.add(spike);
+}
+const gem = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: '#ff8a7a' }));
+gem.position.set(0, 0.02, 0.33);
+crown.add(gem);
+crown.position.y = 2.32;
+crown.rotation.z = 0.08;
+crown.visible = false;
+
+chara.add(shadowDisc, body, head, hair, eyeL, eyeR, blushL, blushR, glintL, glintR, mouth,
+  pack, pocket, strapL, strapR, armL, armR, footL, footR, crown);
+chara.position.y = R + 0.35;
+scene.add(chara);
+
+/* ================================================================
+   CONTROLS — planet rolls under the character
+   ================================================================ */
+const keys = {};
+addEventListener('keydown', (e) => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  keys[e.key.toLowerCase()] = true;
+  if ((e.key.toLowerCase() === 'e' || e.key === 'Enter' || e.key === ' ') && dialogState.open) advanceDialog();
+  unlockAudio();
+});
+addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+
+let heading = Math.PI;          // which way the character faces
+let faceOffset = Math.PI;       // extra turn toward the screen (intro wave)
+let walkPhase = 0;
+let speedNow = 0;
+
+canvas.addEventListener('pointerdown', unlockAudio);
+
+/* start with Home Isle under the character's feet */
+{
+  const q = new THREE.Quaternion().setFromUnitVectors(SPOTS[0].dir, UP);
+  planet.quaternion.premultiply(q);
+}
+
+/* ================================================================
+   AC-STYLE DIALOGUE + animalese blips
+   ================================================================ */
+const dlg = document.getElementById('dialog');
+const dlgName = document.getElementById('dlg-name');
+const dlgText = document.getElementById('dlg-text');
+const dlgNext = document.getElementById('dlg-next');
+const dialogState = { open: false, spot: null, page: 0, typing: null, done: false };
+
+let audioCtx = null, muted = false;
+function unlockAudio() {
+  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {} }
+}
+document.getElementById('mute').addEventListener('click', (e) => {
+  muted = !muted;
+  e.currentTarget.textContent = muted ? '🔇' : '🔊';
+});
+function blip() {
+  if (!audioCtx || muted) return;
+  const voice = dialogState.voice || { base: 260, range: 300 };
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'triangle';
+  o.frequency.value = voice.base + Math.random() * voice.range;
+  g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + 0.08);
+}
+
+function typePage(text) {
+  clearInterval(dialogState.typing);
+  dialogState.done = false;
+  dlgNext.style.display = 'none';
+  // linkify the email
+  const html = text.replace(
+    /([\w.+-]+@[\w-]+\.[\w.]+)/,
+    '<a href="mailto:$1">$1</a>'
+  );
+  const plain = text;
+  let i = 0;
+  dlgText.textContent = '';
+  dialogState.typing = setInterval(() => {
+    i++;
+    if (i >= plain.length) {
+      clearInterval(dialogState.typing);
+      dlgText.innerHTML = html;
+      dialogState.done = true;
+      dlgNext.style.display = 'block';
+      const spot = dialogState.spot;
+      dlgNext.textContent = dialogState.page < spot.pages.length - 1 ? '▼' : '♥';
+      return;
+    }
+    dlgText.textContent = plain.slice(0, i);
+    if (i % 2 === 0 && /\S/.test(plain[i - 1])) blip();
+  }, 24);
+}
+
+function openDialog(spot) {
+  dialogState.open = true;
+  dialogState.spot = spot;
+  dialogState.page = 0;
+  dialogState.voice = spot.voice || { base: 260, range: 300 };
+  dlgName.textContent = spot.tag;
+  dlgName.style.background = spot.color;
+  dlg.classList.add('open');
+  typePage(spot.pages[0]);
+  if (spot.silent) { /* intro: no stamps */ }
+  else if (spot.isNPC) markMet(spot.id);
+  else markVisited(spot.id);
+}
+function advanceDialog() {
+  const s = dialogState;
+  if (!s.open) return;
+  if (!s.done) {           // skip typing
+    clearInterval(s.typing);
+    dlgText.innerHTML = s.spot.pages[s.page].replace(/([\w.+-]+@[\w-]+\.[\w.]+)/, '<a href="mailto:$1">$1</a>');
+    s.done = true;
+    dlgNext.style.display = 'block';
+    dlgNext.textContent = s.page < s.spot.pages.length - 1 ? '▼' : '♥';
+    return;
+  }
+  if (s.page < s.spot.pages.length - 1) {
+    s.page++;
+    typePage(s.spot.pages[s.page]);
+  }
+  // on last page, stay open until the player walks away
+}
+function closeDialog() {
+  dialogState.open = false;
+  dialogState.spot = null;
+  clearInterval(dialogState.typing);
+  dlg.classList.remove('open');
+}
+dlg.addEventListener('click', (e) => { if (e.target.tagName !== 'A') advanceDialog(); });
+
+/* passport stamps */
+const passport = document.getElementById('passport');
+const visited = new Set();
+const met = new Set();
+for (const s of SPOTS) {
+  const el = document.createElement('div');
+  el.className = 'stamp';
+  el.id = 'stamp-' + s.id;
+  el.innerHTML = `<span class="dot"></span>${s.name}`;
+  el.title = 'Travel to ' + s.name;
+  el.addEventListener('click', () => { if (visited.has(s.id)) teleportTo(s); });
+  passport.appendChild(el);
+}
+const friendsHead = document.createElement('div');
+friendsHead.className = 'head';
+friendsHead.style.marginTop = '6px';
+friendsHead.textContent = 'FRIENDS';
+passport.appendChild(friendsHead);
+for (const n of NPCS) {
+  const el = document.createElement('div');
+  el.className = 'stamp friend';
+  el.id = 'stamp-' + n.id;
+  el.innerHTML = `<span class="dot"></span>${n.tag}`;
+  passport.appendChild(el);
+}
+
+/* ---- quests ---- */
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3800);
+}
+
+function confetti() {
+  const colors = ['#ff8a7a', '#f2b04e', '#7ac74f', '#58b4e0', '#b78ae8'];
+  for (let i = 0; i < 80; i++) {
+    const d = document.createElement('div');
+    d.style.cssText = `position:fixed;z-index:90;width:10px;height:14px;top:-24px;pointer-events:none;` +
+      `left:${Math.random() * 100}vw;background:${colors[i % colors.length]};border-radius:3px;`;
+    d.animate(
+      [
+        { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+        { transform: `translateY(110vh) rotate(${420 + Math.random() * 420}deg)`, opacity: 0.9 },
+      ],
+      { duration: 2600 + Math.random() * 2200, delay: Math.random() * 500, easing: 'ease-in', fill: 'forwards' }
+    );
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 5600);
+  }
+}
+
+const quests = { explore: false, friends: false, all: false };
+function updateQuests() {
+  document.getElementById('q-explore-n').textContent = `${visited.size}/${SPOTS.length}`;
+  document.getElementById('q-friends-n').textContent = `${met.size}/${NPCS.length}`;
+  if (!quests.explore && visited.size === SPOTS.length) {
+    quests.explore = true;
+    document.getElementById('q-explore').classList.add('done');
+    toast('🏆 Quest complete: World Explorer!');
+  }
+  if (!quests.friends && met.size === NPCS.length) {
+    quests.friends = true;
+    document.getElementById('q-friends').classList.add('done');
+    toast('🏆 Quest complete: Friend of the Sea!');
+  }
+  if (!quests.all && quests.explore && quests.friends) {
+    quests.all = true;
+    setTimeout(() => {
+      crown.visible = true;
+      confetti();
+      toast("👑 100% complete! You are the mayor of Sam's world!");
+    }, 1500);
+  }
+}
+
+function markVisited(id) {
+  if (visited.has(id)) return;
+  visited.add(id);
+  document.getElementById('stamp-' + id).classList.add('visited');
+  updateQuests();
+}
+function markMet(id) {
+  if (met.has(id)) return;
+  met.add(id);
+  document.getElementById('stamp-' + id).classList.add('met');
+  updateQuests();
+}
+updateQuests();
+
+/* ---- teleport: spin the chosen island back under our feet ---- */
+const teleport = { active: false, e: 0, t: 0, from: new THREE.Quaternion(), to: new THREE.Quaternion() };
+function teleportTo(spot) {
+  const world = spot.dir.clone().applyQuaternion(planet.quaternion).normalize();
+  if (world.dot(UP) > 0.99) return;   // already standing there
+  teleport.from.copy(planet.quaternion);
+  teleport.to.copy(new THREE.Quaternion().setFromUnitVectors(world, UP).multiply(planet.quaternion));
+  teleport.t = 0;
+  teleport.e = 0;
+  teleport.active = true;
+  closeDialog();
+  unlockAudio();
+}
+/* ---- intro: Sam turns to the screen and waves hello ---- */
+const INTRO = {
+  id: 'intro', tag: 'Sam', color: '#ff8a7a', silent: true,
+  voice: { base: 260, range: 300 },
+  pages: [
+    "Hey! Samuel Choe here — welcome to my world. 👋",
+    "Software engineer by day: building things, breaking things, and chasing whatever tech looks fun. After hours it's exploring, gaming, or a good playlist. 🎧",
+    "Current side quests: earning my pilot's license ✈️, riding motorcycles 🏍️, and collecting cultures one country at a time.",
+    "Enough about me — the islands can tell the rest. Go wander!",
+  ],
+};
+const intro = { active: true };
+setTimeout(() => openDialog(INTRO), 1200);
+
+/* ================================================================
+   CUSTOM ASSET SLOTS — drop-in .glb replacements for built-in models.
+   Managed by set-asset.py / scripts/*.sh (see ASSETS.md). If
+   assets/manifest.json exists, each entry swaps a procedural model
+   for your file. No manifest → everything stays procedural.
+   ================================================================ */
+const underRoot = (root, obj) => { for (let p = obj; p; p = p.parent) if (p === root) return true; return false; };
+const dropWalkablesUnder = (root) => {
+  for (let i = walkables.length - 1; i >= 0; i--) if (underRoot(root, walkables[i])) walkables.splice(i, 1);
+};
+
+function swapSlot(slot, model) {
+  if (slot.startsWith('island-')) {
+    // replaces terrain + props; keeps the floating label, dialogue,
+    // proximity trigger, and teleport (those live in code, not the model)
+    const spot = SPOTS.find((s) => 'island-' + s.id === slot);
+    if (!spot) return;
+    dropWalkablesUnder(spot.group);
+    for (const c of [...spot.group.children]) if (c !== spot.label) spot.group.remove(c);
+    spot.group.add(model);
+    model.traverse((o) => { if (o.isMesh) walkables.push(o); });
+  } else if (slot.startsWith('npc-')) {
+    // keeps bobbing, dialogue and voice; swaps only the look
+    const npc = NPCS.find((n) => 'npc-' + n.id === slot);
+    if (!npc) return;
+    dropWalkablesUnder(npc.bobber);
+    npc.bobber.clear();
+    npc.bobber.add(model);
+    model.traverse((o) => { if (o.isMesh) walkables.push(o); });
+  } else if (slot === 'boat') {
+    if (boatBobber) { boatBobber.clear(); boatBobber.add(model); }
+  } else if (slot === 'character') {
+    // keeps the ground shadow and the 100%-quest crown
+    const keep = new Set([shadowDisc, crown]);
+    for (const c of [...chara.children]) if (!keep.has(c)) chara.remove(c);
+    chara.add(model);
+  } else if (slot.startsWith('prop-')) {
+    // replace every placed instance of this prop type, in place
+    const targets = [];
+    planet.traverse((o) => { if (o.userData.propSlot === slot) targets.push(o); });
+    for (const t of targets) {
+      const inst = model.clone(true);
+      inst.position.copy(t.position);
+      inst.rotation.copy(t.rotation);
+      const wasWalkable = walkables.some((w) => underRoot(t, w));
+      dropWalkablesUnder(t);
+      t.parent.add(inst);
+      t.parent.remove(t);
+      if (wasWalkable) inst.traverse((o) => { if (o.isMesh) walkables.push(o); });
+    }
+  }
+}
+
+/* ---- baked-in animations: a clip named 'idle' loops on its own; on the
+   character the game also drives 'walk' and 'wave' by clip name. Props are
+   excluded (they're cloned per instance). See ASSETS.md → Animations. ---- */
+const MIXERS = [];
+const slotActions = {};                    // slot → { clipname → AnimationAction }
+const charClipState = { now: null };
+
+function setupClips(slot, model, clips) {
+  if (!clips || !clips.length || slot.startsWith('prop-')) return;
+  const mixer = new THREE.AnimationMixer(model);
+  MIXERS.push(mixer);
+  const actions = {};
+  for (const c of clips) actions[c.name.toLowerCase()] = mixer.clipAction(c);
+  slotActions[slot] = actions;
+  if (slot === 'character') return;        // driven per-frame in tick()
+  const idle = actions.idle || (clips.length === 1 ? Object.values(actions)[0] : null);
+  if (idle) idle.play();
+}
+
+function playClip(actions, name, state, fade = 0.25) {
+  if (state.now === name) return;
+  const prev = state.now ? actions[state.now] : null;
+  const next = name ? actions[name] : null;
+  state.now = name;
+  if (prev) prev.fadeOut(fade);
+  if (next) next.reset().fadeIn(fade).play();
+}
+
+function driveCharacterClips(moving) {
+  const acts = slotActions.character;
+  if (!acts) return;
+  const want = (faceOffset > 0.4 && acts.wave) ? 'wave'
+             : (moving && acts.walk) ? 'walk'
+             : acts.idle ? 'idle' : null;
+  playClip(acts, want, charClipState);
+}
+
+const assetsReady = (async function applyCustomAssets() {
+  let manifest = null;
+  try {
+    const res = await fetch('assets/manifest.json', { cache: 'no-store' });
+    if (res.ok) manifest = await res.json();
+  } catch { /* no manifest — fully procedural world, that's fine */ }
+  if (!manifest || !manifest.assets || !Object.keys(manifest.assets).length) return;
+  const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+  const loader = new GLTFLoader();
+  const loadOne = (url) => new Promise((resolve, reject) => loader.load(url, resolve, undefined, reject));
+  for (const [slot, url] of Object.entries(manifest.assets)) {
+    try {
+      const gltf = await loadOne(url);
+      const model = gltf.scene;
+      model.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      swapSlot(slot, model);
+      setupClips(slot, model, gltf.animations);
+      console.log(`[assets] custom ${slot} ← ${url}` +
+        (gltf.animations.length ? ` (clips: ${gltf.animations.map((a) => a.name).join(', ')})` : ''));
+    } catch (err) {
+      console.warn(`[assets] could not load ${slot} from ${url} — using built-in model`, err);
+    }
+  }
+})();
+
+/* ================================================================
+   PNG EXPORT MODE — open index.html?export and click the button to
+   save a portrait of every asset (islands, NPCs, character, boat,
+   props) as transparent 1024×1024 PNGs in your Downloads folder.
+   ================================================================ */
+if (new URLSearchParams(location.search).has('export')) {
+  assetsReady.then(() => setTimeout(showExportButton, 400));
+}
+
+function showExportButton() {
+  const btn = document.createElement('button');
+  btn.textContent = '📸 Export all PNGs';
+  btn.style.cssText =
+    'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;' +
+    'font:700 22px Fredoka,sans-serif;padding:20px 36px;border-radius:999px;' +
+    'border:3px solid rgba(123,98,71,.25);background:#fff9e6;color:#7b6247;' +
+    'cursor:pointer;box-shadow:0 8px 0 rgba(123,98,71,.18)';
+  document.body.appendChild(btn);
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    await exportAllPngs((done, total, name) => { btn.textContent = `📸 ${done}/${total} ${name}`; });
+    btn.textContent = '✅ saved to Downloads';
+    setTimeout(() => btn.remove(), 5000);
+  }, { once: true });
+}
+
+async function exportAllPngs(progress) {
+  const SIZE = 1024;
+  const cvs = document.createElement('canvas');
+  const r2 = new THREE.WebGLRenderer({ canvas: cvs, antialias: true, alpha: true, preserveDrawingBuffer: true });
+  r2.setSize(SIZE, SIZE);
+  const cam = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
+  const stage = new THREE.Scene();
+  stage.add(new THREE.HemisphereLight(0xdff3ff, 0xb8dba0, 1.15));
+  const keyLight = new THREE.DirectionalLight(0xfff2d0, 1.6);
+  keyLight.position.set(6, 10, 6);
+  stage.add(keyLight);
+
+  // clone an in-world object and strip placement, labels, and shadows
+  const cleanClone = (obj) => {
+    const c = obj.clone(true);
+    c.position.set(0, 0, 0);
+    c.rotation.set(0, 0, 0);
+    const trash = [];
+    c.traverse((o) => { if (o.isSprite || o.userData.noExport) trash.push(o); });
+    for (const o of trash) o.parent.remove(o);
+    return c;
+  };
+
+  const jobs = [
+    ...SPOTS.map((s) => [`island-${s.id}`, () => cleanClone(s.group)]),
+    ...NPCS.map((n) => [`npc-${n.id}`, () => cleanClone(n.bobber)]),
+    ['boat', () => cleanClone(boatBobber)],
+    ['character', () => cleanClone(chara)],
+    ['prop-tree', () => makeTree(1)],
+    ['prop-palm', () => makePalm(1)],
+    ['prop-snowtree', () => makeSnowTree(1)],
+    ['prop-mountain', () => makeMountain(1)],
+    ['prop-lighthouse', () => makeLighthouse(1)],
+  ];
+
+  for (let i = 0; i < jobs.length; i++) {
+    const [name, make] = jobs[i];
+    progress?.(i + 1, jobs.length, name);
+    const obj = make();
+    stage.add(obj);
+    // frame from a pleasant 3/4 angle
+    const box = new THREE.Box3().setFromObject(obj);
+    const center = box.getCenter(new THREE.Vector3());
+    const sphere = box.getBoundingSphere(new THREE.Sphere());
+    const dist = (sphere.radius * 1.15) / Math.tan((cam.fov * Math.PI) / 360);
+    cam.position.copy(center).add(new THREE.Vector3(0.8, 0.6, 1).normalize().multiplyScalar(dist));
+    cam.near = dist / 100;
+    cam.far = dist * 10;
+    cam.lookAt(center);
+    cam.updateProjectionMatrix();
+    r2.render(stage, cam);
+    const a = document.createElement('a');
+    a.href = cvs.toDataURL('image/png');
+    a.download = `worldfolio-${name}.png`;
+    a.click();
+    stage.remove(obj);
+    await new Promise((res) => setTimeout(res, 350)); // let downloads breathe
+  }
+  r2.dispose();
+}
+
+/* ================================================================
+   GAME LOOP
+   ================================================================ */
+const clock = new THREE.Clock();
+const camPos = new THREE.Vector3(0, R + 9.5, -16);
+const tmpV = new THREE.Vector3();
+
+/* ground detection: ray straight down at the top of the planet */
+const groundRay = new THREE.Raycaster(new THREE.Vector3(0, R + 10, 0), new THREE.Vector3(0, -1, 0));
+let groundY = R;
+
+function sampleGround() {
+  const hits = groundRay.intersectObjects(walkables, false);
+  return hits.length ? hits[0].point.y : R;
+}
+
+function tick() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  /* --- input --- */
+  const fwd = (keys['w'] || keys['arrowup'] ? 1 : 0) - (keys['s'] || keys['arrowdown'] ? 1 : 0);
+  const turn = (keys['a'] || keys['arrowleft'] ? 1 : 0) - (keys['d'] || keys['arrowright'] ? 1 : 0);
+
+  /* first step ends the intro */
+  if (intro.active && (fwd || turn)) {
+    intro.active = false;
+    closeDialog();
+  }
+
+  heading += turn * 2.6 * dt;
+  const dir = new THREE.Vector3(Math.sin(heading), 0, Math.cos(heading));
+
+  const targetSpeed = teleport.active ? 0 : fwd * 7.5;
+  speedNow += (targetSpeed - speedNow) * Math.min(1, dt * 8);
+
+  if (teleport.active) {
+    // fly to the chosen island
+    teleport.t = Math.min(1, teleport.t + dt / 1.2);
+    const e = teleport.t * teleport.t * (3 - 2 * teleport.t);
+    teleport.e = e;
+    planet.quaternion.slerpQuaternions(teleport.from, teleport.to, e);
+    if (teleport.t >= 1) teleport.active = false;
+  } else if (Math.abs(speedNow) > 0.01) {
+    // roll the planet underneath the character
+    const axis = tmpV.copy(dir).cross(UP).normalize();
+    planet.rotateOnWorldAxis(axis, (speedNow * dt) / R);
+    walkPhase += dt * 11 * Math.min(1, Math.abs(speedNow) / 4);
+  }
+
+  /* --- stand on whatever terrain is underfoot --- */
+  const targetGround = sampleGround();
+  groundY += (targetGround - groundY) * Math.min(1, dt * 12);
+
+  /* --- character animation --- */
+  const faceTarget = intro.active ? Math.PI : 0;   // face the screen during the intro
+  faceOffset += (faceTarget - faceOffset) * Math.min(1, dt * 5);
+  chara.rotation.y = heading + faceOffset;
+  const moving = Math.abs(speedNow) > 0.4;
+  const bob = moving ? Math.abs(Math.sin(walkPhase)) * 0.14 : Math.sin(t * 2) * 0.03;
+  const hop = teleport.active ? Math.sin(Math.PI * teleport.e) * 2.4 : 0;
+  chara.position.y = groundY + bob + hop;
+  shadowDisc.material.opacity = 0.22 * (1 - Math.min(1, hop / 1.5));
+  const swing = moving ? Math.sin(walkPhase) * 0.5 : 0;
+  armL.rotation.x = swing;
+  if (faceOffset > 0.4) {
+    // waving hello 👋
+    armR.rotation.x = 0;
+    armR.rotation.z = 2.2 + Math.sin(t * 9) * 0.4;
+    armR.position.y = 0.95;
+  } else {
+    armR.rotation.z = 0;
+    armR.position.y = 0.75;
+    armR.rotation.x = -swing;
+  }
+  footL.position.z = 0.05 + (moving ? Math.sin(walkPhase) * 0.18 : 0);
+  footR.position.z = 0.05 + (moving ? -Math.sin(walkPhase) * 0.18 : 0);
+  chara.rotation.z = moving ? Math.sin(walkPhase) * 0.04 : 0;
+  shadowDisc.position.y = 0.02 - bob;   // shadow stays on the ground
+
+  /* --- custom-asset clips (idle / walk / wave from the .glb) --- */
+  driveCharacterClips(moving);
+  for (const m of MIXERS) m.update(dt);
+
+  /* --- camera: behind the character, low and wide --- */
+  const wantPos = tmpV.set(
+    -dir.x * 16, R + 9.5, -dir.z * 16
+  );
+  camPos.lerp(wantPos, Math.min(1, dt * 4));
+  camera.position.copy(camPos);
+  camera.lookAt(dir.x * 4, groundY + 0.5, dir.z * 4);
+
+  /* --- labels: bob + hide when behind the planet --- */
+  for (const s of SPOTS) {
+    s.label.position.y = 4.6 + Math.sin(t * 1.8 + s.lon) * 0.25;
+    const world = s.dir.clone().applyQuaternion(planet.quaternion);
+    s.label.material.opacity = THREE.MathUtils.clamp((world.dot(camera.position.clone().normalize()) + 0.15) * 3, 0, 1);
+    s.label.material.transparent = true;
+  }
+
+  /* --- everything at sea bobs gently on the waves --- */
+  for (const f of FLOATERS) {
+    const amp = f.gentle ? 0.35 : 1;
+    f.bobber.position.y = Math.sin(t * 1.4 + f.phase) * 0.1 * amp;
+    f.bobber.rotation.z = Math.sin(t * 0.9 + f.phase) * 0.06 * amp;
+    f.bobber.rotation.x = Math.cos(t * 1.1 + f.phase) * 0.04 * amp;
+  }
+
+  /* --- proximity: island underfoot, or an ocean friend nearby? --- */
+  if (!teleport.active && !intro.active) {
+    let near = null;
+    for (const s of SPOTS) {
+      const world = s.dir.clone().applyQuaternion(planet.quaternion);
+      if (world.dot(UP) > 0.955) { near = s; break; }
+    }
+    if (!near) {
+      for (const n of NPCS) {
+        const world = n.dir.clone().applyQuaternion(planet.quaternion);
+        if (world.dot(UP) > 0.982) { near = n; break; }
+      }
+    }
+    if (near && (!dialogState.open || dialogState.spot !== near)) openDialog(near);
+    else if (!near && dialogState.open) closeDialog();
+  }
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+
+requestAnimationFrame(() =>
+  setTimeout(() => document.getElementById('loader').classList.add('done'), 400)
+);
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
