@@ -260,6 +260,22 @@
     #passport .stamp { font-size: 12px; padding: 5px 12px 5px 7px; }
     #title { font-size: 16px; padding: 8px 16px; }
   }
+
+  /* ---------- desktop-only gate ---------- */
+  #desktop-gate {
+    display: none;
+    position: fixed; inset: 0; z-index: 300;
+    background: linear-gradient(180deg, var(--sky-hi), var(--sky-lo));
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; text-align: center; padding: 32px;
+  }
+  #desktop-gate .globe { font-size: 56px; }
+  #desktop-gate h1 { font-size: 24px; color: var(--cocoa); }
+  #desktop-gate p { font-size: 15.5px; font-weight: 500; line-height: 1.6; color: var(--cocoa-light); max-width: 320px; }
+  #desktop-gate a { color: #3f9ad1; font-weight: 600; }
+  @media (max-width: 899px), (hover: none) and (pointer: coarse) {
+    #desktop-gate { display: flex; }
+  }
 </style>
 
 <script type="importmap">
@@ -277,6 +293,13 @@
 <canvas id="scene"></canvas>
 
 <div id="loader"><div class="ball"></div><span>PACKING BAGS…</span></div>
+
+<div id="desktop-gate">
+  <div class="globe">🌍</div>
+  <h1>This world needs a bigger screen</h1>
+  <p>Sam&rsquo;s World-folio is an interactive 3D world built for keyboards and desktop screens. Come back on a computer to explore it!</p>
+  <p><a href="https://schoe99.github.io/">&larr; Back to my portfolio</a></p>
+</div>
 
 <div class="hud" id="title">🌍 <em>Sam's</em> World-folio</div>
 
@@ -307,6 +330,12 @@
 </div>
 
 <script type="module">
+// desktop-only: the gate is shown by CSS on phones/tablets — don't boot the 3D world there
+if (getComputedStyle(document.getElementById('desktop-gate')).display !== 'none') {
+  document.getElementById('loader').classList.add('done');
+  throw new Error('World-folio is desktop-only');
+}
+
 import * as THREE from 'three';
 
 /* ================================================================
